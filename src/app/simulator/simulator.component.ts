@@ -110,18 +110,39 @@ export class SimulatorComponent implements OnDestroy {
     this.monthlyMealAllowance = this.calculateMonthlyMealAllowance();
 
     // Ambos os caminhos geram ProposalData[]
-    const proposals: ProposalData[] = this.calculateBy === 'annualCost' 
+    let proposals: ProposalData[] = this.calculateBy === 'annualCost' 
       ? this.calculateByAnnualCost() 
       : this.calculateByNetSalaryTarget();
 
+if (this.calculateBy === 'targetNetSalary') {
+  proposals = proposals.map(p => this.recalculateAnnualCost(p));
+}
+      
     // Conversão unificada para SimulationResult[]
     this.liquidSalarySimulations = proposals.map(proposal => 
       this.mapToSimulationResult(proposal)
     );
     
+    
+
+    
     this.isLoading = false;
   }
 
+
+// Novo método
+private recalculateAnnualCost(proposal: ProposalData): ProposalData {
+  const monthlyGross = proposal.monthlyBaseSalary + proposal.monthlyIHT;
+  const correctAnnualCost = this.calculateAnnualCostToCompany(
+    monthlyGross,
+    proposal.monthlyBenefits
+  );
+  
+  return {
+    ...proposal,
+    annualCost: correctAnnualCost
+  };
+}
   private calculateByAnnualCost(): ProposalData[] {
     const monthsToMultiply = this.getMonthsMultiplier();
     const tsuFactor = this.tsu / 100;
@@ -199,6 +220,22 @@ export class SimulatorComponent implements OnDestroy {
   private calculateByNetSalaryTarget(): ProposalData[] {
     const mappedMaritalStatus = this.getMappedMaritalStatus();
 
+    console.log('=== DEBUG REVERSE ===');
+    console.log('Target Net:', this.targetNetSalary);
+    console.log('Meal Daily:', this.subsRefeicaoDaily);
+    console.log('Meal Days:', this.subsRefeicaoDays);
+    console.log('Meal Months:', this.subsRefeicaoMonths);
+    console.log('Annual Meal:', this.annualDailyMealAllowance);
+    console.log('Annual Cost:', this.annualCost);
+    //iht
+    console.log('IHT Percentage:', this.IhtPercentage);
+    console.log('IHT:', this.pickedIHTPercentage);
+    //tsu
+    console.log('TSU:', this.tsu);
+    //ss
+    console.log('Social Security:', this.segSocialRegimeGeral);
+    console.log('=====================');
+
     const proposals = this.reverseService.getProposals({
       targetNetSalary: this.targetNetSalary,
       location: this.location,
@@ -263,12 +300,26 @@ export class SimulatorComponent implements OnDestroy {
     grossSalary: number,
     valueToBenefits: number
   ): number {
-    const monthsToMultiply = this.getMonthsMultiplier();
-    const annualGross = grossSalary * monthsToMultiply;
-    const annualBenefits = valueToBenefits * 12;
-    const tsuFactor = 1 + this.tsu / 100;
-    
-    return annualGross * tsuFactor + annualBenefits + this.annualDailyMealAllowance;
+   const monthsToMultiply = this.getMonthsMultiplier();
+  const annualGross = grossSalary * monthsToMultiply;
+  const annualBenefits = valueToBenefits * 12;
+  const tsuFactor = 1 + this.tsu / 100;
+  
+  console.log('=== DEBUG CUSTO ===');
+  console.log('Gross Mensal:', grossSalary);
+  console.log('Benefícios Mensais:', valueToBenefits);
+  console.log('Meses (Gross):', monthsToMultiply);
+  console.log('Gross Anual:', annualGross);
+  console.log('TSU Factor:', tsuFactor);
+  console.log('TSU Amount:', annualGross * (tsuFactor - 1));
+  console.log('Benefícios Anuais:', annualBenefits);
+  console.log('Subsídio Anual:', this.annualDailyMealAllowance);
+  
+  const total = annualGross * tsuFactor + annualBenefits + this.annualDailyMealAllowance;
+  console.log('TOTAL:', total);
+  console.log('==================');
+  
+  return total;
   }
 
   // Helper methods
@@ -285,6 +336,12 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   private calculateAnnualMealAllowance(): number {
+    console.log('=== DEBUG MEAL ===');
+    console.log('Daily:', this.subsRefeicaoDaily);
+    console.log('Days:', this.subsRefeicaoDays);
+    console.log('Months:', this.subsRefeicaoMonths);
+    console.log('Result:', this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths);
+    console.log('==================');
     return this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths;
   }
 

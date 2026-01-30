@@ -1,0 +1,469 @@
+<div class="container-fluid">
+  <div class="form d-flex flex-column align-items-center">
+    <div class="d-flex gap-3">
+      <div class="d-flex flex-column">
+		
+        <div class="mb-3">
+          <label for="calculateBy" class="form-label">Calcular por:</label>
+          <select
+            class="form-select"
+            [(ngModel)]="calculateBy"
+            name="calculateBy"
+          >
+            <option value="annualCost">Custo Anual Para Empresa</option>
+            <option value="targetNetSalary">Salário Líq. Pretendido</option>
+          </select>
+        </div>
+      </div>
+      <div class="d-flex flex-column">
+        @if (calculateBy === "annualCost") {
+          <div class="mb-3">
+            <label for="basic-url" class="form-label"
+              >Custo Anual Para Empresa</label
+            >
+            <div class="input-group">
+              <span class="input-group-text" id="basic-addon3">€</span>
+              <input
+                type="number"
+                class="form-control"
+                id="annualCost"
+                name="annualCost"
+                aria-describedby="basic-addon3 basic-addon4"
+                [(ngModel)]="annualCost"
+              />
+            </div>
+          </div>
+        }
+
+        @if (calculateBy === "targetNetSalary") {
+          <div class="mb-3">
+            <label for="basic-url" class="form-label"
+              >Salário Líquido Pretendido</label
+            >
+            <div class="input-group">
+              <span class="input-group-text" id="basic-addon3">€</span>
+              <input
+                type="number"
+                class="form-control"
+                id="grossSalary"
+                name="grossSalary"
+                aria-describedby="basic-addon3 basic-addon4"
+                [(ngModel)]="targetNetSalary"
+              />
+            </div>
+          </div>
+
+          <div class="mb-3 d-flex">
+            <label for="basic-url" class="form-label"
+              >Inclui Subs. Refeição</label
+            >
+            <div class="form-check">
+              <input
+                type="checkbox"
+                id="includeMealAllowance"
+                name="includeMealAllowance"
+                [(ngModel)]="includeMealAllowance"
+              />
+            </div>
+          </div>
+        }
+      </div>
+      <div class="accordion mt-3" id="accordionExample" ngbAccordion>
+        <div ngbAccordionItem class="accordion-item" [collapsed]="true">
+          <h2 ngbAccordionHeader class="accordion-header">
+            <button ngbAccordionButton class="accordion-button">
+              <i class="bi bi-person me-2"></i>
+              Trabalhador
+            </button>
+          </h2>
+          <div ngbAccordionCollapse class="accordion-collapse">
+            <div ngbAccordionBody class="accordion-body">
+              <ng-template>
+                <div class="mb-3">
+                  <label for="grossSalary" class="form-label"
+                    >Duodécimos
+                  </label>
+                  <select class="form-select" [(ngModel)]="hasDuodecimos">
+                    <option value="true" selected>Sim</option>
+                    <option value="false">Não</option>
+                  </select>
+                </div>
+
+                <!-- Percentagem para Isenção de Horário de Trabalho -->
+                <div class="mb-3">
+                  <label for="grossSalary" class="form-label"
+                    >Estado Civil
+                  </label>
+                  <select class="form-select" [(ngModel)]="maritalStatus">
+                    <option value="single" selected>Não Casado</option>
+                    <option value="married">Casado</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="grossSalary" class="form-label"
+                    >Localização
+                  </label>
+                  <select class="form-select" [(ngModel)]="location">
+                    <option value="continente" selected>Portugal Continental</option>
+                    <option value="madeira" disabled>Madeira</option>
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="grossSalary" class="form-label"
+                    >Nr. Dependentes
+                  </label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    [(ngModel)]="dependents"
+                  />
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion mt-3" id="accordionExample" ngbAccordion>
+        <div ngbAccordionItem class="accordion-item" [collapsed]="true">
+          <h2 ngbAccordionHeader class="accordion-header">
+            <button ngbAccordionButton class="accordion-button">
+              <i class="bi bi-gear me-2"></i>
+              Configurações
+            </button>
+          </h2>
+          <div ngbAccordionCollapse class="accordion-collapse">
+            <div ngbAccordionBody class="accordion-body">
+              <ng-template>
+                <!-- Percentagem para Isenção de Horário de Trabalho -->
+                <div class="mb-3">
+                  <label for="grossSalary" class="form-label"
+                    >% para IHT:
+                    <small
+                      >% do Salário Base para Isenção de Horário de Trabalho
+                    </small>
+                  </label>
+                  <select class="form-select" [(ngModel)]="IhtPercentage">
+                    <!-- de 30 a 0 de 5 em 5-->
+                    @for (item of [30, 25, 20, 15, 10, 5, 0]; track item) {
+                      <option
+                        value="{{ item }}"
+                        [selected]="item === IhtPercentage"
+                      >
+                        {{ item }}%
+                      </option>
+                    }
+                  </select>
+                </div>
+
+                <div class="mb-3">
+                  <label for="basic-url" class="form-label"
+                    >Valor Diário do Subs. Refeição
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon3">€</span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="dailyMealAllowance"
+                      aria-describedby="basic-addon3 basic-addon4"
+                      [(ngModel)]="subsRefeicaoDaily"
+                    />
+                  </div>
+                  <label for="basic-url" class="form-label">x Dias </label>
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="dailyMealDays"
+                      aria-describedby="basic-addon3 basic-addon4"
+                      [(ngModel)]="subsRefeicaoDays"
+                    />
+                  </div>
+                  <label for="basic-url" class="form-label"
+                    >Nrº Meses SR
+                  </label>
+                  <div class="input-group">
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="dailyMealMonth"
+                      aria-describedby="basic-addon3 basic-addon4"
+                      [(ngModel)]="subsRefeicaoMonths"
+                    />
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <label for="basic-url" class="form-label"
+                    >Valor Mensal do Subs. Refeição</label
+                  >
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon3">€</span>
+                    <input
+                      type="text"
+                      disabled
+                      class="form-control"
+                      id="monthlyMealAllowance"
+                      aria-describedby="basic-addon3 basic-addon4"
+                      [(ngModel)]="monthlyMealAllowance"
+                    />
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="grossSalary" class="form-label"
+                    >% para Seg. Social
+                    <small>Paga pela empresa </small>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon3">%</span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="socialSecurity"
+                      aria-describedby="basic-addon3 basic-addon4"
+                      [value]="tsu"
+                    />
+                  </div>
+                </div>
+
+				<div class="mb-3">
+                  <label for="grossSalary" class="form-label"
+                    >Seg. Social Reg. Geral
+                    <small>Paga pelo trabalhador </small>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text" id="basic-addon3">%</span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      id="segSocialRegimeGeral"
+                      aria-describedby="basic-addon3 basic-addon4"
+                      [value]="segSocialRegimeGeral"
+                    />
+                  </div>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mt-4">
+      <button
+        class="btn btn-primary w-100 px-5 rounded-pill"
+        (click)="calculate()"
+        [disabled]="isLoading"
+      >
+        @if (isLoading) {
+          <span class="spinner-border spinner-border-sm" role="status"></span>
+        }
+        Calcular
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <!--    <div class="col-3">
+            <app-form></app-form>
+        </div> -->
+	
+	@if (liquidSalarySimulations.length > 0 && !isLoading) {
+		
+      <div class="d-flex flex-column gap-4">
+        Resultado:
+        <div class="card" [hidden]="true">
+          <div class="card-header">Custo para a Empresa</div>
+          <div class="card-body py-0 px-3">
+            <div class="row">
+              <table class="table table-striped-columns table-responsive table-condensed">
+                <thead>
+                  <tr class="text-center">
+                    <th scope="col" class="col-1">% Benefícios Fléxiveis</th>
+                    <th scope="col" class="col-2">Salário Base</th>
+                    <th scope="col" class="col-1">
+                      IHT ({{ pickedIHTPercentage }}%)
+                    </th>
+                    <th scope="col" class="col-2">SB + IHT</th>
+                    <th scope="col" class="col-1">Duodécimos</th>
+                    <th scope="col" class="col-2">Subs. Refeição</th>
+                    <th scope="col" class="col-2">Benefícios Fléxiveis/Mês</th>
+					
+                    <!-- 
+                                    <th scope="col">Total Custo</th>
+                                    <th scope="col">Subs. Refeição</th>
+                                    <th scope="col">Custo Total para a Empresa</th> -->
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of liquidSalarySimulations; track item) {
+                    <tr class="text-center">
+                      <td>{{ item.flexBenefitsPercentage }}%</td>
+                      <td>{{ item.salaryBase }} €</td>
+                      <td>{{ item.IHT }} €</td>
+                      <td>{{ item.salaryBaseAndIHT }} €</td>
+                     
+                      <td>{{ item.monthlyMealAllowance }} €</td>
+                      <td>
+                        <span class="text-muted font-size-xs"
+                          >({{ item.flexBenefitsPercentage }}%)
+                        </span>
+                        {{ item.monthlyValueToBenefits }} €
+                      </td>
+                      <!--    <td>{{ item.rendimento }} €</td>
+                                       <td>{{ item.monthlyMealAllowance }} €</td>
+                                       <td>{{ item.custoAnualPAraEmpresaComSR }} €</td> -->
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">Salário Liquido</div>
+          <div class="card-body py-0 px-1">
+            <div class="row">
+              <table class="table table-striped-columns table-responsive">
+                <thead>
+                  <tr class="text-center">
+                    <th scope="col col-1">
+                      % Benefícios <br> Fléxiveis
+                      <!-- toggle hide icon-button-->
+                     
+                    </th>
+                    <th scope="col col-1">
+                      Vencimento <br>Base
+                     
+                    </th>
+                    <th scope="col">
+                      IHT <br> <small>{{ pickedIHTPercentage }}%</small>
+                     
+                    </th>
+                    @if (hasDuodecimos == true) {
+                      <th scope="col">
+                        Duodécimo SF
+                        <button
+                          class="btn btn-outline-secondary btn-sm"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Tooltip on top"
+                        >
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      </th>
+                      <th scope="col">
+                        Duodécimos SN
+                        <button
+                          class="btn btn-outline-secondary btn-sm"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Tooltip on top"
+                        >
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      </th>
+
+                      <th scope="col">
+                        IRS Férias
+                        <button
+                          class="btn btn-outline-secondary btn-sm"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Tooltip on top"
+                        >
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      </th>
+                      <th scope="col">
+                        IRS Natal
+                        <button
+                          class="btn btn-outline-secondary btn-sm"
+                          data-bs-toggle="tooltip"
+                          data-bs-placement="top"
+                          title="Tooltip on top"
+                        >
+                          <i class="bi bi-eye"></i>
+                        </button>
+                      </th>
+                    }
+                    <th scope="col">
+                      IRS
+                     
+                    </th>
+                    <th scope="col">
+                      Salário <br>Liquido
+                     
+                    </th>
+                    <th scope="col col-1">
+                      Cartão Refeição<br> (22 dias)
+                     
+                    </th>
+                    <th scope="col">
+                      Cartão <br> Benef. Flex.
+                     
+                    </th>
+                    <th scope="col">
+                      Total <br> Min
+                     
+                    </th>
+                    <th scope="col">
+                      Total <br> Max
+                    </th>
+					          <th class="col">Custo Anual <br> Empresa</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (
+                    item of liquidSalarySimulations;
+                    track item.flexBenefitsPercentage
+                  ) {
+                    <tr class="text-center">
+                      <td class="col-1">{{ item.flexBenefitsPercentage }}%</td>
+                      <td>{{ item.salaryBase }} €</td>
+                      <td>{{ item.IHT }} €</td>
+                      @if (hasDuodecimos == true) {
+                        <td>{{ item.duodecimoSF }} €</td>
+                        <td>{{ item.duodecimoSN }} €</td>
+                        <td>{{ item.irsSF }} €</td>
+                        <td>{{ item.irsSN }} €</td>
+                      }
+                      <td>{{ item.irs }} €</td>
+                      <td>{{ item.netSalary }} €</td>
+                      <td>{{ item.monthlyMealAllowance }} €</td>
+                      <td>
+                        <span class="text-muted font-size-xs"
+                          >({{ item.flexBenefitsPercentage }}%)
+                        </span>
+                        {{ item.monthlyValueToBenefits }} €
+                      </td>
+                      <td>{{ item.totalMin }} €</td>
+                      <td>{{ item.totalMax }} €</td>
+						          <td>{{ item.custoAnualParaEmpresa }} €</td>
+					
+                      <!--    <td>{{ item.rendimento }} €</td>
+                                       <td>{{ item.monthlyMealAllowance }} €</td>
+                                       <td>{{ item.custoAnualPAraEmpresaComSR }} €</td> -->
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+	@if (liquidSalarySimulations.length == 0) {
+		<div class="card mt-4 w-50 p-0 mx-auto">
+		
+			<div class="card-body">
+				<div class="text-center">
+					Preencha os dados acima para obter simulações.
+				</div>
+			</div>
+		</div>
+	}
+</div>

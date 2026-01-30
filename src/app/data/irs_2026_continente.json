@@ -1,0 +1,155 @@
+{
+  "meta": {
+    "country": "PT",
+    "region": "continente",
+    "tax": "IRS",
+    "type": "retencao_na_fonte",
+    "validFrom": "2026-01-01",
+    "validTo": "2026-12-31",
+    "unit": "EUR",
+    "period": "monthly"
+  },
+  "formula": {
+    "standard": "withholding = R * rate - deduction - additionalDeductionPerDependent * dependents",
+    "disabilityNoDependents": "withholding = R * rate - deduction"
+  },
+  "tables": [
+    {
+      "id": "I",
+      "name": "Tabela I - Trabalho dependente",
+      "audience": "Não casado sem dependentes ou casado 2 titulares",
+      "hasDisability": false,
+      "assumesDependents": "0+",
+      "bands": [
+        { "upTo": 920.0, "rate": 0.0, "deduction": 0.0, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.0 },
+        { "upTo": 1042.0, "rate": 0.125, "deduction": { "type": "formula", "expression": "0.125 * 2.60 * (1273.85 - R)" }, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.053 },
+        { "upTo": 1108.0, "rate": 0.157, "deduction": { "type": "formula", "expression": "0.157 * 1.35 * (1554.83 - R)" }, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.072 },
+        { "upTo": 1154.0, "rate": 0.157, "deduction": 94.71, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.075 },
+        { "upTo": 1212.0, "rate": 0.212, "deduction": 158.18, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.081 },
+        { "upTo": 1819.0, "rate": 0.241, "deduction": 193.33, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.135 },
+        { "upTo": 2119.0, "rate": 0.311, "deduction": 320.66, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.16 },
+        { "upTo": 2499.0, "rate": 0.349, "deduction": 401.19, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.188 },
+        { "upTo": 3305.0, "rate": 0.3836, "deduction": 487.66, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.236 },
+        { "upTo": 5547.0, "rate": 0.3969, "deduction": 531.62, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.301 },
+        { "upTo": 20221.0, "rate": 0.4495, "deduction": 823.4, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.409 },
+        { "over": 20221.0, "rate": 0.4717, "deduction": 1272.31, "additionalPerDependent": 21.43, "effectiveRateAtLimit": null }
+      ]
+    },
+    {
+      "id": "II",
+      "name": "Tabela II - Trabalho dependente",
+      "audience": "Não casado com um ou mais dependentes",
+      "hasDisability": false,
+      "assumesDependents": "1+",
+      "bands": [
+        { "upTo": 920.0, "rate": 0.0, "deduction": 0.0, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.0 },
+        { "upTo": 1042.0, "rate": 0.125, "deduction": { "type": "formula", "expression": "0.125 * 2.60 * (1273.85 - R)" }, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.053 },
+        { "upTo": 1108.0, "rate": 0.157, "deduction": { "type": "formula", "expression": "0.157 * 1.35 * (1554.83 - R)" }, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.072 },
+        { "upTo": 1154.0, "rate": 0.157, "deduction": 94.71, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.075 },
+        { "upTo": 1212.0, "rate": 0.212, "deduction": 158.18, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.081 },
+        { "upTo": 1819.0, "rate": 0.241, "deduction": 193.33, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.135 },
+        { "upTo": 2119.0, "rate": 0.311, "deduction": 320.66, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.16 },
+        { "upTo": 2499.0, "rate": 0.349, "deduction": 401.19, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.188 },
+        { "upTo": 3305.0, "rate": 0.3836, "deduction": 487.66, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.236 },
+        { "upTo": 5547.0, "rate": 0.3969, "deduction": 531.62, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.301 },
+        { "upTo": 20221.0, "rate": 0.4495, "deduction": 823.4, "additionalPerDependent": 34.29, "effectiveRateAtLimit": 0.409 },
+        { "over": 20221.0, "rate": 0.4717, "deduction": 1272.31, "additionalPerDependent": 34.29, "effectiveRateAtLimit": null }
+      ]
+    },
+    {
+      "id": "III",
+      "name": "Tabela III - Trabalho dependente",
+      "audience": "Casado, único titular",
+      "hasDisability": false,
+      "assumesDependents": "0+",
+      "bands": [
+        { "upTo": 991.0, "rate": 0.0, "deduction": 0.0, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.0 },
+        { "upTo": 1042.0, "rate": 0.125, "deduction": { "type": "formula", "expression": "0.125 * 2.60 * (1372.15 - R)" }, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.022 },
+        { "upTo": 1108.0, "rate": 0.125, "deduction": { "type": "formula", "expression": "0.125 * 1.35 * (1677.85 - R)" }, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.038 },
+        {
+          "upTo": 1119.0,
+          "rate": 0.125,
+          "deduction": 96.17,
+          "additionalPerDependent": 42.86,
+          "effectiveRateAtLimit": 0.039,
+          "notes": "Source had '#VALUE!' in the 'Parcela a abater' formula cell; mapped as fixed 96.17 as shown."
+        },
+        { "upTo": 1432.0, "rate": 0.1272, "deduction": 98.64, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.058 },
+        { "upTo": 1962.0, "rate": 0.157, "deduction": 141.32, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.085 },
+        { "upTo": 2240.0, "rate": 0.1938, "deduction": 213.53, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.098 },
+        { "upTo": 2773.0, "rate": 0.2277, "deduction": 289.47, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.123 },
+        { "upTo": 3389.0, "rate": 0.257, "deduction": 370.72, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.148 },
+        { "upTo": 5965.0, "rate": 0.2881, "deduction": 476.12, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.208 },
+        { "upTo": 20265.0, "rate": 0.3843, "deduction": 1049.96, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.332 },
+        { "over": 20265.0, "rate": 0.4717, "deduction": 2821.13, "additionalPerDependent": 42.86, "effectiveRateAtLimit": null }
+      ]
+    },
+    {
+      "id": "IV",
+      "name": "Tabela IV - Trabalho dependente",
+      "audience": "Não casado ou casado dois titulares sem dependentes - Pessoa com deficiência",
+      "hasDisability": true,
+      "assumesDependents": "0",
+      "bands": [
+        { "upTo": 1694.0, "rate": 0.0, "deduction": 0.0, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.0 },
+        { "upTo": 2063.0, "rate": 0.212, "deduction": 359.13, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.038 },
+        { "upTo": 2492.0, "rate": 0.311, "deduction": 563.37, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.085 },
+        { "upTo": 4487.0, "rate": 0.349, "deduction": 658.07, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.202 },
+        { "upTo": 4753.0, "rate": 0.3836, "deduction": 813.33, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.212 },
+        { "upTo": 6687.0, "rate": 0.3969, "deduction": 876.55, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.266 },
+        { "upTo": 20468.0, "rate": 0.4495, "deduction": 1228.29, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.389 },
+        { "over": 20468.0, "rate": 0.4717, "deduction": 1682.68, "additionalPerDependent": 0.0, "effectiveRateAtLimit": null }
+      ]
+    },
+    {
+      "id": "V",
+      "name": "Tabela V - Trabalho dependente",
+      "audience": "Não casado com um ou mais dependentes - Pessoa com deficiência",
+      "hasDisability": true,
+      "assumesDependents": "1+",
+      "bands": [
+        { "upTo": 1938.0, "rate": 0.0, "deduction": 0.0, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.0 },
+        { "upTo": 2063.0, "rate": 0.2132, "deduction": 413.19, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.013 },
+        { "upTo": 2854.0, "rate": 0.311, "deduction": 614.96, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.096 },
+        { "upTo": 4504.0, "rate": 0.349, "deduction": 723.42, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.188 },
+        { "upTo": 6826.0, "rate": 0.3836, "deduction": 879.26, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.255 },
+        { "upTo": 7048.0, "rate": 0.3969, "deduction": 970.05, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.259 },
+        { "upTo": 20468.0, "rate": 0.4495, "deduction": 1340.78, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.384 },
+        { "over": 20468.0, "rate": 0.4717, "deduction": 1795.17, "additionalPerDependent": 42.86, "effectiveRateAtLimit": null }
+      ]
+    },
+    {
+      "id": "VI",
+      "name": "Tabela VI - Trabalho dependente",
+      "audience": "Casado dois titulares com um ou mais dependentes - Pessoa com deficiência",
+      "hasDisability": true,
+      "assumesDependents": "1+",
+      "bands": [
+        { "upTo": 1668.0, "rate": 0.0, "deduction": 0.0, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.0 },
+        { "upTo": 2068.0, "rate": 0.2049, "deduction": 341.78, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.04 },
+        { "upTo": 2497.0, "rate": 0.241, "deduction": 416.44, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.074 },
+        { "upTo": 3107.0, "rate": 0.311, "deduction": 591.23, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.121 },
+        { "upTo": 4504.0, "rate": 0.349, "deduction": 709.3, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.192 },
+        { "upTo": 6826.0, "rate": 0.3836, "deduction": 865.14, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.257 },
+        { "upTo": 7048.0, "rate": 0.3969, "deduction": 955.93, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.261 },
+        { "upTo": 20468.0, "rate": 0.4495, "deduction": 1326.66, "additionalPerDependent": 21.43, "effectiveRateAtLimit": 0.385 },
+        { "over": 20468.0, "rate": 0.4717, "deduction": 1781.05, "additionalPerDependent": 21.43, "effectiveRateAtLimit": null }
+      ]
+    },
+    {
+      "id": "VII",
+      "name": "Tabela VII - Trabalho dependente",
+      "audience": "Casado, único titular - Pessoa com deficiência",
+      "hasDisability": true,
+      "assumesDependents": "0+",
+      "bands": [
+        { "upTo": 2325.0, "rate": 0.0, "deduction": 0.0, "additionalPerDependent": 0.0, "effectiveRateAtLimit": 0.0 },
+        { "upTo": 3494.0, "rate": 0.2277, "deduction": 529.41, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.076 },
+        { "upTo": 3761.0, "rate": 0.257, "deduction": 631.79, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.089 },
+        { "upTo": 6687.0, "rate": 0.2881, "deduction": 748.76, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.176 },
+        { "upTo": 20468.0, "rate": 0.4244, "deduction": 1660.2, "additionalPerDependent": 42.86, "effectiveRateAtLimit": 0.343 },
+        { "over": 20468.0, "rate": 0.4717, "deduction": 2628.34, "additionalPerDependent": 42.86, "effectiveRateAtLimit": null }
+      ]
+    }
+  ]
+}

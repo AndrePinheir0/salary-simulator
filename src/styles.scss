@@ -1,1 +1,22 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Importing Bootstrap SCSS file. */
+@use 'bootstrap/scss/bootstrap';
+@use 'bootstrap-icons/font/bootstrap-icons.scss';
+
+// font-size
+body {
+    font-size: 0.9rem;
+}
+
+.form-label {
+    font-size: 0.9rem;
+}
+
+.font-size-xs {
+    font-size: 0.75rem;
+}
+
+.font-size-2xs {
+    font-size: 0.5rem;
+}

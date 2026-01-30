@@ -1,0 +1,194 @@
+<form>
+  <div class="mb-3">
+    <label for="calculateBy" class="form-label">Calcular por:</label>
+    <select class="form-select" (change)="onCalculateByChange($event)">
+      <option value="annualCost" selected>Custo Anual Para Empresa</option>
+      <option value="grossSalary">Salário Bruto</option>
+    </select>
+  </div>
+
+  <div class="mb-3" [hidden]="calculateBy === 'grossSalary'">
+    <label for="basic-url" class="form-label">Custo Anual Para Empresa</label>
+    <div class="input-group">
+      <span class="input-group-text" id="basic-addon3">€</span>
+      <input
+        type="text"
+        class="form-control"
+        id="annualCost"
+        aria-describedby="basic-addon3 basic-addon4"
+        [placeholder]="defaultAnnualCost"
+      />
+    </div>
+  </div>
+
+  <div class="mb-3" [hidden]="calculateBy === 'annualCost'">
+    <label for="basic-url" class="form-label">Salário Bruto Mensal</label>
+    <div class="input-group">
+      <span class="input-group-text" id="basic-addon3">€</span>
+      <input
+        type="text"
+        class="form-control"
+        id="grossSalary"
+        aria-describedby="basic-addon3 basic-addon4"
+        [placeholder]="defaultGrossSalary"
+      />
+    </div>
+  </div>
+
+  <div class="accordion" id="accordionExample" ngbAccordion>
+    <div ngbAccordionItem class="accordion-item" [collapsed]="false">
+      <h2 ngbAccordionHeader class="accordion-header">
+        <button ngbAccordionButton class="accordion-button">
+          <i class="bi bi-person me-2"></i>
+          Trabalhador
+        </button>
+      </h2>
+      <div ngbAccordionCollapse class="accordion-collapse">
+        <div ngbAccordionBody class="accordion-body">
+          <ng-template>
+            <!-- Percentagem para Isenção de Horário de Trabalho -->
+            <div class="mb-3">
+              <label for="grossSalary" class="form-label"
+                >Estado Civil
+                
+              </label>
+              <select class="form-select" aria-label="Default select example">
+               <option value="nao_casado" selected>Não Casado</option>
+               <option value="casado">Casado</option>
+              </select>
+            </div>
+
+             <div class="mb-3">
+              <label for="grossSalary" class="form-label"
+                >Localização
+                
+              </label>
+              <select class="form-select" aria-label="Default select example">
+               <option value="continente" selected>Continente</option>
+               <option value="islands">Ilhas</option>
+              </select>
+            </div>
+
+              <div class="mb-3">
+              <label for="grossSalary" class="form-label"
+                >Nr. Dependentes
+                
+              </label>
+              <select class="form-select" aria-label="Default select example">
+               <option value="0" selected>0</option>
+               <option value="1">1</option>
+               <option value="2">2 ou mais</option>
+             
+              </select>
+            </div>
+
+           
+          </ng-template>
+        </div>
+      </div>
+    </div>
+    <div ngbAccordionItem class="accordion-item" [collapsed]="true">
+      <h2 ngbAccordionHeader class="accordion-header">
+        <button ngbAccordionButton class="accordion-button">
+          <i class="bi bi-gear me-2"></i>
+          Configurações
+        </button>
+      </h2>
+      <div ngbAccordionCollapse class="accordion-collapse">
+        <div ngbAccordionBody class="accordion-body">
+          <ng-template>
+            <!-- Percentagem para Isenção de Horário de Trabalho -->
+            <div class="mb-3">
+              <label for="grossSalary" class="form-label"
+                >% para IHT:
+                <small
+                  >% do Salário Base para Isenção de Horário de Trabalho
+                </small>
+              </label>
+              <select class="form-select" aria-label="Default select example">
+                <!-- de 30 a 0 de 5 em 5-->
+                @for (item of [30, 25, 20, 15, 10, 5, 0]; track item) {
+                  <option
+                    value="{{ item }}"
+                    [selected]="item === defaultIhtPercentage"
+                  >
+                    {{ item }}%
+                  </option>
+                }
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label for="basic-url" class="form-label"
+                >Valor Diário do Subs. Refeição
+              </label>
+              <div class="input-group">
+                <span class="input-group-text" id="basic-addon3">€</span>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="dailyMealAllowance"
+                  aria-describedby="basic-addon3 basic-addon4"
+                  [value]="defaultDailyMealAllowance"
+                />
+              </div>
+              <label for="basic-url" class="form-label">x Dias </label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="dailyMealDays"
+                  aria-describedby="basic-addon3 basic-addon4"
+                  [value]="22"
+                />
+              </div>
+              <label for="basic-url" class="form-label">Nrº Meses SR </label>
+              <div class="input-group">
+                <input
+                  type="text"
+                  class="form-control"
+                  id="dailyMealMonth"
+                  aria-describedby="basic-addon3 basic-addon4"
+                  [value]="11"
+                />
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="basic-url" class="form-label"
+                >Valor Mensal do Subs. Refeição</label
+              >
+              <div class="input-group">
+                <span class="input-group-text" id="basic-addon3">€</span>
+                <input
+                  type="text"
+                  disabled
+                  class="form-control"
+                  id="monthlyMealAllowance"
+                  aria-describedby="basic-addon3 basic-addon4"
+                  [value]="defaultMonthlyMealAllowance"
+                />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="grossSalary" class="form-label"
+                >% para Seg. Social
+                <small>Paga pela empresa </small>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text" id="basic-addon3">%</span>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="socialSecurity"
+                  aria-describedby="basic-addon3 basic-addon4"
+                  [value]="23.75"
+                />
+              </div>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>

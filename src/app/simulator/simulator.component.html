@@ -279,7 +279,6 @@
 	@if (liquidSalarySimulations.length > 0 && !isLoading) {
 		
       <div class="d-flex flex-column gap-4">
-        Resultado:
         <div class="card" [hidden]="true">
           <div class="card-header">Custo para a Empresa</div>
           <div class="card-body py-0 px-3">
@@ -330,7 +329,7 @@
         </div>
 
         <div class="card">
-          <div class="card-header">Salário Liquido</div>
+          <div class="card-header">Resultado</div>
           <div class="card-body py-0 px-1">
             <div class="row">
               <table class="table table-striped-columns table-responsive">
@@ -381,7 +380,7 @@
                       Salário <br>Liquido
                      
                     </th>
-                    <th scope="col col-1">
+                    <th scope="col">
                       Cartão Refeição<br> <small class="text-muted">(22 dias)</small>
                      
                     </th>

@@ -24,10 +24,11 @@
             <div class="input-group">
               <span class="input-group-text" id="basic-addon3">€</span>
               <input
-                type="number"
+                type="text"
                 class="form-control"
                 id="annualCost"
                 name="annualCost"
+                appCurrencyMask
                 aria-describedby="basic-addon3 basic-addon4"
                 [(ngModel)]="annualCost"
               />
@@ -43,10 +44,11 @@
             <div class="input-group">
               <span class="input-group-text" id="basic-addon3">€</span>
               <input
-                type="number"
+                type="text"
                 class="form-control"
                 id="grossSalary"
                 name="grossSalary"
+                appCurrencyMask
                 aria-describedby="basic-addon3 basic-addon4"
                 [(ngModel)]="targetNetSalary"
               />
@@ -129,7 +131,7 @@
       <div class="accordion mt-3" id="accordionExample" ngbAccordion>
         <div ngbAccordionItem class="accordion-item" [collapsed]="true">
           <h2 ngbAccordionHeader class="accordion-header">
-            <button ngbAccordionButton class="accordion-button">
+            <button ngbAccordionButton class="accordion-button p-2">
               <i class="bi bi-gear me-2"></i>
               Configurações
             </button>
@@ -264,7 +266,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <div class="row mt-4">
     <!--    <div class="col-3">
             <app-form></app-form>
         </div> -->

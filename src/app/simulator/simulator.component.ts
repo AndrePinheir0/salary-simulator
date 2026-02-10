@@ -7,6 +7,7 @@ import {
 } from '../services/calculate-net-salary-service.service';
 import { SalaryReverseService } from '../services/salary-reverse.service';
 import { CurrencyPtPipe } from '../pipes/currency-pt.pipe';
+import { CurrencyMaskDirective } from '../directives/currency-mask.directive';
 import irsData from '../data/irs_2026_continente.json';
 
 interface SimulationResult {
@@ -50,7 +51,7 @@ type LocationOption = 'continente' | 'acores' | 'madeira';
 @Component({
   selector: 'app-simulator',
   standalone: true,
-  imports: [FormsModule, NgbAccordionModule, CurrencyPtPipe],
+  imports: [FormsModule, NgbAccordionModule, CurrencyPtPipe, CurrencyMaskDirective],
   templateUrl: './simulator.component.html',
   styleUrl: './simulator.component.scss',
 })

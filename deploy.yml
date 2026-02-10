@@ -1,0 +1,6 @@
+# Updated deploy.yml
+
+# ... (rest of the file content)
+
+# Replace npm run build with npm run build:gh
+# Replace publish_dir with ./dist/salary-simulator/browser

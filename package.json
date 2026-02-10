@@ -7,7 +7,9 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:salary-simulator": "node dist/salary-simulator/server/server.mjs"
+    "serve:ssr:salary-simulator": "node dist/salary-simulator/server/server.mjs",
+    "build:gh": "ng build --configuration production --base-href /salary-simulator/",
+    "deploy:gh": "npm run build:gh && angular-cli-ghpages --dir=dist/salary-simulator/browser --branch=gh-pages"
   },
   "private": true,
   "dependencies": {

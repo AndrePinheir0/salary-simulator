@@ -1,8 +1,12 @@
 import { Component, inject, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
-import { CalculateNetSalaryService, MaritalStatus } from '../services/calculate-net-salary-service.service';
+import {
+  CalculateNetSalaryService,
+  MaritalStatus,
+} from '../services/calculate-net-salary-service.service';
 import { SalaryReverseService } from '../services/salary-reverse.service';
+import { CurrencyPtPipe } from '../pipes/currency-pt.pipe';
 import irsData from '../data/irs_2026_continente.json';
 
 interface SimulationResult {
@@ -46,7 +50,7 @@ type LocationOption = 'continente' | 'acores' | 'madeira';
 @Component({
   selector: 'app-simulator',
   standalone: true,
-  imports: [FormsModule, NgbAccordionModule],
+  imports: [FormsModule, NgbAccordionModule, CurrencyPtPipe],
   templateUrl: './simulator.component.html',
   styleUrl: './simulator.component.scss',
 })
@@ -87,9 +91,14 @@ export class SimulatorComponent implements OnDestroy {
   readonly discounts = {
     irs_only: ['flexibleBenefits'],
     irs_and_ss: ['salaryBase', 'IHT'],
-    no_discount: ['mealAllowance']
+    no_discount: ['mealAllowance'],
   } as const;
 
+  loadingPhrases = [
+    'A calcular...',
+    'A preencher tabela...',
+    'A finalizar apresentação',
+  ];
   private readonly irsService = inject(CalculateNetSalaryService);
   private readonly reverseService = inject(SalaryReverseService);
   private loadingTimer?: number;
@@ -105,53 +114,58 @@ export class SimulatorComponent implements OnDestroy {
   calculate(): void {
     this.resetResults();
     this.isLoading = true;
+  
+    setTimeout(() => {
     this.pickedIHTPercentage = this.IhtPercentage;
     this.annualDailyMealAllowance = this.calculateAnnualMealAllowance();
     this.monthlyMealAllowance = this.calculateMonthlyMealAllowance();
 
     // Ambos os caminhos geram ProposalData[]
-    let proposals: ProposalData[] = this.calculateBy === 'annualCost' 
-      ? this.calculateByAnnualCost() 
-      : this.calculateByNetSalaryTarget();
+    let proposals: ProposalData[] =
+      this.calculateBy === 'annualCost'
+        ? this.calculateByAnnualCost()
+        : this.calculateByNetSalaryTarget();
 
-if (this.calculateBy === 'targetNetSalary') {
-  proposals = proposals.map(p => this.recalculateAnnualCost(p));
-}
-      
+    if (this.calculateBy === 'targetNetSalary') {
+      proposals = proposals.map((p) => this.recalculateAnnualCost(p));
+    }
+
     // Conversão unificada para SimulationResult[]
-    this.liquidSalarySimulations = proposals.map(proposal => 
-      this.mapToSimulationResult(proposal)
+    this.liquidSalarySimulations = proposals.map((proposal) =>
+      this.mapToSimulationResult(proposal),
     );
-    
-    
 
-    
     this.isLoading = false;
+    }, 0);
   }
 
+  // Novo método
+  private recalculateAnnualCost(proposal: ProposalData): ProposalData {
+    const monthlyGross = proposal.monthlyBaseSalary + proposal.monthlyIHT;
+    const correctAnnualCost = this.calculateAnnualCostToCompany(
+      monthlyGross,
+      proposal.monthlyBenefits,
+    );
 
-// Novo método
-private recalculateAnnualCost(proposal: ProposalData): ProposalData {
-  const monthlyGross = proposal.monthlyBaseSalary + proposal.monthlyIHT;
-  const correctAnnualCost = this.calculateAnnualCostToCompany(
-    monthlyGross,
-    proposal.monthlyBenefits
-  );
-  
-  return {
-    ...proposal,
-    annualCost: correctAnnualCost
-  };
-}
+    return {
+      ...proposal,
+      annualCost: correctAnnualCost,
+    };
+  }
   private calculateByAnnualCost(): ProposalData[] {
     const monthsToMultiply = this.getMonthsMultiplier();
     const tsuFactor = this.tsu / 100;
     const budget = this.annualCost - this.annualDailyMealAllowance;
     const proposals: ProposalData[] = [];
 
-    for (let percentage = 0; percentage <= this.maxFlexBenefitsPercentage; percentage += this.flexBenefitsStep) {
+    for (
+      let percentage = 0;
+      percentage <= this.maxFlexBenefitsPercentage;
+      percentage += this.flexBenefitsStep
+    ) {
       const normalizedPercentage = percentage / 100;
-      const factor = (1 - normalizedPercentage) * (1 + tsuFactor) + normalizedPercentage;
+      const factor =
+        (1 - normalizedPercentage) * (1 + tsuFactor) + normalizedPercentage;
       const distributable = budget / factor;
 
       const annualValueToBenefits = distributable * normalizedPercentage;
@@ -162,7 +176,7 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
 
       const IHT = this.calculateIHT(monthlyGross);
       const valueWithoutIHT = monthlyGross - IHT;
-      
+
       const mappedMaritalStatus = this.getMappedMaritalStatus();
 
       // Cálculo Max: Benefits não sujeitos a IRS nem SS
@@ -171,7 +185,7 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
         maritalStatus: mappedMaritalStatus,
         location: this.location,
         dependents: Number(this.dependents) || 0,
-        socialSecurityRate: this.segSocialRegimeGeral / 100
+        socialSecurityRate: this.segSocialRegimeGeral / 100,
       });
 
       // Cálculo Min: Benefits sujeitos a IRS mas não SS
@@ -180,7 +194,7 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
         maritalStatus: mappedMaritalStatus,
         location: this.location,
         dependents: Number(this.dependents) || 0,
-        socialSecurityRate: 0
+        socialSecurityRate: 0,
       });
 
       const ssForMin = this.irsService.calculate({
@@ -188,14 +202,18 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
         maritalStatus: mappedMaritalStatus,
         location: this.location,
         dependents: Number(this.dependents) || 0,
-        socialSecurityRate: this.segSocialRegimeGeral / 100
+        socialSecurityRate: this.segSocialRegimeGeral / 100,
       }).socialSecurity;
 
-      const netSalaryMin = (monthlyGross + monthlyValueToBenefits) - calculationMin.irsWithheld - ssForMin;
-      
+      const netSalaryMin =
+        monthlyGross +
+        monthlyValueToBenefits -
+        calculationMin.irsWithheld -
+        ssForMin;
+
       const custoAnualParaEmpresa = this.calculateAnnualCostToCompany(
         monthlyGross,
-        monthlyValueToBenefits
+        monthlyValueToBenefits,
       );
 
       // Formato ProposalData padronizado
@@ -208,9 +226,15 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
         irs: this.roundToCents(calculationMax.irsWithheld),
         socialSecurityMax: this.roundToCents(calculationMax.socialSecurity),
         socialSecurityMin: this.roundToCents(ssForMin),
-        totalNetMax: this.roundToCents(calculationMax.netSalary + this.monthlyMealAllowance + monthlyValueToBenefits),
-        totalNetMin: this.roundToCents(netSalaryMin + this.monthlyMealAllowance),
-        annualCost: this.roundToCents(custoAnualParaEmpresa)
+        totalNetMax: this.roundToCents(
+          calculationMax.netSalary +
+            this.monthlyMealAllowance +
+            monthlyValueToBenefits,
+        ),
+        totalNetMin: this.roundToCents(
+          netSalaryMin + this.monthlyMealAllowance,
+        ),
+        annualCost: this.roundToCents(custoAnualParaEmpresa),
       });
     }
 
@@ -247,7 +271,7 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
       mealAllowanceMonths: this.subsRefeicaoMonths,
       ihtPercentage: this.IhtPercentage,
       tsu: this.tsu,
-      ssRate: this.segSocialRegimeGeral / 100
+      ssRate: this.segSocialRegimeGeral / 100,
     });
 
     // Retorna diretamente as proposals do serviço
@@ -257,7 +281,9 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
 
   private getMappedMaritalStatus(): MaritalStatus {
     if (this.maritalStatus === 'married') {
-      return this.dependents === 1 ? 'married_one_holder' : 'married_two_holders';
+      return this.dependents === 1
+        ? 'married_one_holder'
+        : 'married_two_holders';
     }
     return 'single';
   }
@@ -285,41 +311,44 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
       irsSF: 0,
       irsSN: 0,
       irs,
-      netSalary: Number((baseSalary + iht - irs - socialSecurityMax).toFixed(2)),
+      netSalary: Number(
+        (baseSalary + iht - irs - socialSecurityMax).toFixed(2),
+      ),
       monthlyMealAllowance: Number(proposal.monthlyMealAllowance),
       monthlyValueToBenefits: monthlyBenefits,
       totalMax: Number(proposal.totalNetMax.toFixed(2)),
       totalMin: Number(proposal.totalNetMin.toFixed(2)),
       salaryBaseAndIHT: baseSalary + iht,
       rendimento: baseSalary + iht + monthlyBenefits,
-      custoAnualParaEmpresa: Number(proposal.annualCost.toFixed(2))
+      custoAnualParaEmpresa: Number(proposal.annualCost.toFixed(2)),
     };
   }
 
   private calculateAnnualCostToCompany(
     grossSalary: number,
-    valueToBenefits: number
+    valueToBenefits: number,
   ): number {
-   const monthsToMultiply = this.getMonthsMultiplier();
-  const annualGross = grossSalary * monthsToMultiply;
-  const annualBenefits = valueToBenefits * 12;
-  const tsuFactor = 1 + this.tsu / 100;
-  
-  console.log('=== DEBUG CUSTO ===');
-  console.log('Gross Mensal:', grossSalary);
-  console.log('Benefícios Mensais:', valueToBenefits);
-  console.log('Meses (Gross):', monthsToMultiply);
-  console.log('Gross Anual:', annualGross);
-  console.log('TSU Factor:', tsuFactor);
-  console.log('TSU Amount:', annualGross * (tsuFactor - 1));
-  console.log('Benefícios Anuais:', annualBenefits);
-  console.log('Subsídio Anual:', this.annualDailyMealAllowance);
-  
-  const total = annualGross * tsuFactor + annualBenefits + this.annualDailyMealAllowance;
-  console.log('TOTAL:', total);
-  console.log('==================');
-  
-  return total;
+    const monthsToMultiply = this.getMonthsMultiplier();
+    const annualGross = grossSalary * monthsToMultiply;
+    const annualBenefits = valueToBenefits * 12;
+    const tsuFactor = 1 + this.tsu / 100;
+
+    console.log('=== DEBUG CUSTO ===');
+    console.log('Gross Mensal:', grossSalary);
+    console.log('Benefícios Mensais:', valueToBenefits);
+    console.log('Meses (Gross):', monthsToMultiply);
+    console.log('Gross Anual:', annualGross);
+    console.log('TSU Factor:', tsuFactor);
+    console.log('TSU Amount:', annualGross * (tsuFactor - 1));
+    console.log('Benefícios Anuais:', annualBenefits);
+    console.log('Subsídio Anual:', this.annualDailyMealAllowance);
+
+    const total =
+      annualGross * tsuFactor + annualBenefits + this.annualDailyMealAllowance;
+    console.log('TOTAL:', total);
+    console.log('==================');
+
+    return total;
   }
 
   // Helper methods
@@ -340,9 +369,14 @@ private recalculateAnnualCost(proposal: ProposalData): ProposalData {
     console.log('Daily:', this.subsRefeicaoDaily);
     console.log('Days:', this.subsRefeicaoDays);
     console.log('Months:', this.subsRefeicaoMonths);
-    console.log('Result:', this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths);
+    console.log(
+      'Result:',
+      this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths,
+    );
     console.log('==================');
-    return this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths;
+    return (
+      this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths
+    );
   }
 
   private roundToCents(value: number): number {

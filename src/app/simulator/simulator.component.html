@@ -301,16 +301,16 @@
                   @for (item of liquidSalarySimulations; track item) {
                     <tr class="text-center">
                       <td>{{ item.flexBenefitsPercentage }}%</td>
-                      <td>{{ item.salaryBase }} €</td>
-                      <td>{{ item.IHT }} €</td>
-                      <td>{{ item.salaryBaseAndIHT }} €</td>
+                      <td>{{ item.salaryBase | currencyPt }}</td>
+                      <td>{{ item.IHT | currencyPt }}</td>
+                      <td>{{ item.salaryBaseAndIHT | currencyPt }}</td>
                      
-                      <td>{{ item.monthlyMealAllowance }} €</td>
+                      <td>{{ item.monthlyMealAllowance | currencyPt }}</td>
                       <td>
                         <span class="text-muted font-size-xs"
                           >({{ item.flexBenefitsPercentage }}%)
                         </span>
-                        {{ item.monthlyValueToBenefits }} €
+                        {{ item.monthlyValueToBenefits | currencyPt }}
                       </td>
                       <!--    <td>{{ item.rendimento }} €</td>
                                        <td>{{ item.monthlyMealAllowance }} €</td>
@@ -423,26 +423,26 @@
                   ) {
                     <tr class="text-center">
                       <td class="col-1">{{ item.flexBenefitsPercentage }}%</td>
-                      <td>{{ item.salaryBase }} €</td>
-                      <td>{{ item.IHT }} €</td>
+                      <td>{{ item.salaryBase | currencyPt }}</td>
+                      <td>{{ item.IHT | currencyPt }}</td>
                       @if (hasDuodecimos == true) {
-                        <td>{{ item.duodecimoSF }} €</td>
-                        <td>{{ item.duodecimoSN }} €</td>
-                        <td>{{ item.irsSF }} €</td>
-                        <td>{{ item.irsSN }} €</td>
+                        <td>{{ item.duodecimoSF | currencyPt }}</td>
+                        <td>{{ item.duodecimoSN | currencyPt }}</td>
+                        <td>{{ item.irsSF | currencyPt }}</td>
+                        <td>{{ item.irsSN | currencyPt }}</td>
                       }
-                      <td>{{ item.irs }} €</td>
-                      <td>{{ item.netSalary }} €</td>
-                      <td>{{ item.monthlyMealAllowance }} €</td>
+                      <td>{{ item.irs | currencyPt }}</td>
+                      <td>{{ item.netSalary | currencyPt }}</td>
+                      <td>{{ item.monthlyMealAllowance | currencyPt }}</td>
                       <td>
                         <span class="text-muted font-size-xs"
                           >({{ item.flexBenefitsPercentage }}%)
                         </span>
-                        {{ item.monthlyValueToBenefits }} €
+                        {{ item.monthlyValueToBenefits | currencyPt }}
                       </td>
-                      <td>{{ item.totalMin }} €</td>
-                      <td>{{ item.totalMax }} €</td>
-						          <td>{{ item.custoAnualParaEmpresa }} €</td>
+                      <td>{{ item.totalMin | currencyPt }}</td>
+                      <td>{{ item.totalMax | currencyPt }}</td>
+						          <td>{{ item.custoAnualParaEmpresa | currencyPt }}</td>
 					
                       <!--    <td>{{ item.rendimento }} €</td>
                                        <td>{{ item.monthlyMealAllowance }} €</td>

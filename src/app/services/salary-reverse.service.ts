@@ -81,10 +81,13 @@ export class SalaryReverseService {
     const monthlyValueToBenefits = (totalValueAfterTsu * flexPct) / 12;
     const monthlyValueWithoutBenefits = monthlyValueToDistribute - monthlyValueToBenefits;
 
-    const monthlyIHT = (monthlyValueWithoutBenefits * input.ihtPercentage) / 100;
-    const monthlyBaseSalary = monthlyValueWithoutBenefits - monthlyIHT;
-
-    const grossSalary = monthlyBaseSalary + monthlyIHT;
+    // IHT = 25% do Vencimento Base (SB), não do Gross
+    // Se Gross = SB + IHT e IHT = p% × SB, então:
+    // Gross = SB + (p/100) × SB = SB × (1 + p/100)
+    // Logo: IHT = Gross × p / (100 + p)
+    const grossSalary = monthlyValueWithoutBenefits;
+    const monthlyIHT = (grossSalary * input.ihtPercentage) / (100 + input.ihtPercentage);
+    const monthlyBaseSalary = grossSalary - monthlyIHT;
 
     // Max Case (Benefits exempt)
     const calculationMax = this.irsService.calculate({

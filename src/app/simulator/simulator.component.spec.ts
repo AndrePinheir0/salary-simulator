@@ -179,7 +179,29 @@ describe('SimulatorComponent', () => {
     }));
   });
 
+  describe('Meal Allowance Logic', () => {
+    it('should include meal allowance when includeMealAllowance is true', fakeAsync(() => {
+      component.includeMealAllowance = true;
+      component.calculate();
+      tick(1500);
+
+      // Value should be (10.22 * 22) = 224.84
+      expect(component.monthlyMealAllowance).toBe(224.84);
+      expect(component.annualDailyMealAllowance).toBeGreaterThan(0);
+    }));
+
+    it('should set meal allowance to 0 when includeMealAllowance is false', fakeAsync(() => {
+      component.includeMealAllowance = false;
+      component.calculate();
+      tick(1500);
+
+      expect(component.monthlyMealAllowance).toBe(0);
+      expect(component.annualDailyMealAllowance).toBe(0);
+    }));
+  });
+
   describe('Marital Status and Dependents Mapping', () => {
+
     it('should map "single" and 0 dependents to Table I', fakeAsync(() => {
       component.maritalStatus = 'single';
       component.dependents = 0;

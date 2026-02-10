@@ -283,7 +283,7 @@ export class SimulatorComponent implements OnDestroy {
       maritalStatus: mappedMaritalStatus,
       dependents: Number(this.dependents) || 0,
       hasDuodecimos: this.hasDuodecimos,
-      mealAllowanceDaily: this.subsRefeicaoDaily,
+      mealAllowanceDaily: this.includeMealAllowance ? this.subsRefeicaoDaily : 0,
       mealAllowanceDays: this.subsRefeicaoDays,
       mealAllowanceMonths: this.subsRefeicaoMonths,
       ihtPercentage: this.IhtPercentage,
@@ -418,10 +418,12 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   private calculateMonthlyMealAllowance(): number {
-    return this.subsRefeicaoDaily * this.subsRefeicaoDays;
+    return this.includeMealAllowance ? this.subsRefeicaoDaily * this.subsRefeicaoDays : 0;
   }
 
   private calculateAnnualMealAllowance(): number {
+    if (!this.includeMealAllowance) return 0;
+
     console.log('=== DEBUG MEAL ===');
     console.log('Daily:', this.subsRefeicaoDaily);
     console.log('Days:', this.subsRefeicaoDays);

@@ -66,6 +66,7 @@ export class SimulatorComponent implements OnDestroy {
 
   // Form inputs
   hasDuodecimos = false;
+  pickedHasDuodecimos = false;
   includeMealAllowance = true;
   IhtPercentage = 25;
   calculateBy: CalculateBy = 'annualCost';
@@ -95,9 +96,9 @@ export class SimulatorComponent implements OnDestroy {
   } as const;
 
   loadingPhrases = [
-    'A calcular...',
-    'A preencher tabela...',
-    'A finalizar apresentação',
+    'Espera...',
+    'Quase...',
+    'A finalizar...',
   ];
   private readonly irsService = inject(CalculateNetSalaryService);
   private readonly reverseService = inject(SalaryReverseService);
@@ -111,32 +112,48 @@ export class SimulatorComponent implements OnDestroy {
     this.clearLoadingTimer();
   }
 
+  displayedLoadingPhrases: string[] = [];
+
   calculate(): void {
+    this.pickedHasDuodecimos = this.hasDuodecimos;
     this.resetResults();
     this.isLoading = true;
+    
+    let phraseIndex = 0;
+    this.displayedLoadingPhrases = [this.loadingPhrases[0]];
+    
+    // Cycle through loading phrases
+    this.loadingTimer = window.setInterval(() => {
+      phraseIndex++;
+      if (phraseIndex < this.loadingPhrases.length) {
+        this.displayedLoadingPhrases.push(this.loadingPhrases[phraseIndex]);
+      }
+    }, 200);
   
     setTimeout(() => {
-    this.pickedIHTPercentage = this.IhtPercentage;
-    this.annualDailyMealAllowance = this.calculateAnnualMealAllowance();
-    this.monthlyMealAllowance = this.calculateMonthlyMealAllowance();
+      this.clearLoadingTimer();
+      
+      this.pickedIHTPercentage = this.IhtPercentage;
+      this.annualDailyMealAllowance = this.calculateAnnualMealAllowance();
+      this.monthlyMealAllowance = this.calculateMonthlyMealAllowance();
 
-    // Ambos os caminhos geram ProposalData[]
-    let proposals: ProposalData[] =
-      this.calculateBy === 'annualCost'
-        ? this.calculateByAnnualCost()
-        : this.calculateByNetSalaryTarget();
+      // Ambos os caminhos geram ProposalData[]
+      let proposals: ProposalData[] =
+        this.calculateBy === 'annualCost'
+          ? this.calculateByAnnualCost()
+          : this.calculateByNetSalaryTarget();
 
-    if (this.calculateBy === 'targetNetSalary') {
-      proposals = proposals.map((p) => this.recalculateAnnualCost(p));
-    }
+      if (this.calculateBy === 'targetNetSalary') {
+        proposals = proposals.map((p) => this.recalculateAnnualCost(p));
+      }
 
-    // Conversão unificada para SimulationResult[]
-    this.liquidSalarySimulations = proposals.map((proposal) =>
-      this.mapToSimulationResult(proposal),
-    );
+      // Conversão unificada para SimulationResult[]
+      this.liquidSalarySimulations = proposals.map((proposal) =>
+        this.mapToSimulationResult(proposal),
+      );
 
-    this.isLoading = false;
-    }, 0);
+      this.isLoading = false;
+    }, 1000);
   }
 
   // Novo método
@@ -293,26 +310,66 @@ export class SimulatorComponent implements OnDestroy {
    * Todos os cálculos passam por aqui
    */
   private mapToSimulationResult(proposal: ProposalData): SimulationResult {
-    const baseSalary = Number(proposal.monthlyBaseSalary.toFixed(2));
-    const iht = Number(proposal.monthlyIHT.toFixed(2));
-    const irs = Number(proposal.irs.toFixed(2));
+    let baseSalary = Number(proposal.monthlyBaseSalary.toFixed(2));
+    let iht = Number(proposal.monthlyIHT.toFixed(2));
+    const totalIrs = Number(proposal.irs.toFixed(2));
     const socialSecurityMax = Number(proposal.socialSecurityMax.toFixed(2));
     const monthlyBenefits = Number(proposal.monthlyBenefits.toFixed(2));
 
-    const duodecimoSF = this.hasDuodecimos ? baseSalary / 12 : 0;
-    console.log(proposal.annualCost);
+    let duodecimoSF = 0;
+    let duodecimoSN = 0;
+    let irsSF = 0;
+    let irsSN = 0;
+    let irsBase = totalIrs;
+
+    if (this.hasDuodecimos) {
+      // Deconstruct the values into 14-month basis
+      // The proposal values are currently (Annual / 12), so we convert back to (Annual / 14)
+      const baseSalary14 = (proposal.monthlyBaseSalary * 12) / 14;
+      const iht14 = (proposal.monthlyIHT * 12) / 14;
+
+      duodecimoSF = baseSalary14 / 12;
+      duodecimoSN = baseSalary14 / 12;
+
+      // Recalculate IRS just for the base part (14 months perspective)
+      // We assume IHT is also part of the base tax calculation
+      const mappedMaritalStatus = this.getMappedMaritalStatus();
+      const calculationBase = this.irsService.calculate({
+        grossSalary: baseSalary14 + iht14,
+        maritalStatus: mappedMaritalStatus,
+        location: this.location,
+        dependents: Number(this.dependents) || 0,
+        socialSecurityRate: this.segSocialRegimeGeral / 100,
+      });
+
+      irsBase = Number(calculationBase.irsWithheld.toFixed(2));
+      const irsRemanescente = Math.max(0, totalIrs - irsBase);
+      
+      // Split remaining IRS between the two duodecimos
+      irsSF = Number((irsRemanescente / 2).toFixed(2));
+      irsSN = Number((irsRemanescente / 2).toFixed(2));
+      
+      // Update displayed base values to be the 14-month values
+      baseSalary = Number(baseSalary14.toFixed(2));
+      iht = Number(iht14.toFixed(2));
+    }
 
     return {
       flexBenefitsPercentage: proposal.flexBenefitsPercentage,
       salaryBase: baseSalary,
       IHT: iht,
-      duodecimoSF,
-      duodecimoSN: duodecimoSF,
-      irsSF: 0,
-      irsSN: 0,
-      irs,
+      duodecimoSF: Number(duodecimoSF.toFixed(2)),
+      duodecimoSN: Number(duodecimoSN.toFixed(2)),
+      irsSF,
+      irsSN,
+      irs: irsBase,
       netSalary: Number(
-        (baseSalary + iht - irs - socialSecurityMax).toFixed(2),
+        (
+          proposal.monthlyBaseSalary + 
+          proposal.monthlyIHT - 
+          totalIrs - 
+          socialSecurityMax
+        ).toFixed(2),
       ),
       monthlyMealAllowance: Number(proposal.monthlyMealAllowance),
       monthlyValueToBenefits: monthlyBenefits,

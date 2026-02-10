@@ -84,8 +84,8 @@
                     >Duodécimos
                   </label>
                   <select class="form-select" [(ngModel)]="hasDuodecimos">
-                    <option value="true" selected>Sim</option>
-                    <option value="false">Não</option>
+                    <option [ngValue]="true">Sim</option>
+                    <option [ngValue]="false">Não</option>
                   </select>
                 </div>
 
@@ -149,8 +149,7 @@
                     <!-- de 30 a 0 de 5 em 5-->
                     @for (item of [30, 25, 20, 15, 10, 5, 0]; track item) {
                       <option
-                        value="{{ item }}"
-                        [selected]="item === IhtPercentage"
+                        [ngValue]="item"
                       >
                         {{ item }}%
                       </option>
@@ -269,6 +268,13 @@
     <!--    <div class="col-3">
             <app-form></app-form>
         </div> -->
+        @if (isLoading) {
+          <div class="col-12 text-center mt-3">
+            @for (phrase of displayedLoadingPhrases; track phrase) {
+              <div>{{ phrase }}</div>
+            }
+          </div>
+        }
 	
 	@if (liquidSalarySimulations.length > 0 && !isLoading) {
 		
@@ -343,7 +349,7 @@
                       IHT <br> <small class="text-muted">({{ pickedIHTPercentage }}%)</small>
                      
                     </th>
-                    @if (hasDuodecimos == true) {
+                    @if (pickedHasDuodecimos == true) {
                       <th scope="col">
                         Duodécimo SF
                         <button
@@ -352,7 +358,7 @@
                           data-bs-placement="top"
                           title="Tooltip on top"
                         >
-                          <i class="bi bi-eye"></i>
+                         
                         </button>
                       </th>
                       <th scope="col">
@@ -363,30 +369,7 @@
                           data-bs-placement="top"
                           title="Tooltip on top"
                         >
-                          <i class="bi bi-eye"></i>
-                        </button>
-                      </th>
-
-                      <th scope="col">
-                        IRS Férias
-                        <button
-                          class="btn btn-outline-secondary btn-sm"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title="Tooltip on top"
-                        >
-                          <i class="bi bi-eye"></i>
-                        </button>
-                      </th>
-                      <th scope="col">
-                        IRS Natal
-                        <button
-                          class="btn btn-outline-secondary btn-sm"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title="Tooltip on top"
-                        >
-                          <i class="bi bi-eye"></i>
+                         
                         </button>
                       </th>
                     }
@@ -425,11 +408,9 @@
                       <td class="col-1">{{ item.flexBenefitsPercentage }}%</td>
                       <td>{{ item.salaryBase | currencyPt }}</td>
                       <td>{{ item.IHT | currencyPt }}</td>
-                      @if (hasDuodecimos == true) {
+                      @if (pickedHasDuodecimos == true) {
                         <td>{{ item.duodecimoSF | currencyPt }}</td>
                         <td>{{ item.duodecimoSN | currencyPt }}</td>
-                        <td>{{ item.irsSF | currencyPt }}</td>
-                        <td>{{ item.irsSN | currencyPt }}</td>
                       }
                       <td>{{ item.irs | currencyPt }}</td>
                       <td>{{ item.netSalary | currencyPt }}</td>

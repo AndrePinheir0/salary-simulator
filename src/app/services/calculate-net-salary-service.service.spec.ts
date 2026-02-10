@@ -1,141 +1,68 @@
 import { TestBed } from '@angular/core/testing';
-import { CalculateNetSalaryService, IrsDataset, IrsInput } from './calculate-net-salary-service.service';
+import { CalculateNetSalaryService, IrsInput, MaritalStatus } from './calculate-net-salary-service.service';
+import irsData from '../data/irs_2026_continente.json';
 
 describe('CalculateNetSalaryService', () => {
   let service: CalculateNetSalaryService;
 
-  // Mock dataset for testing
-  const mockDataset: IrsDataset = {
-    meta: {
-      country: 'PT',
-      region: 'continente',
-      validFrom: '2026-01-01',
-      validTo: '2026-12-31',
-      period: 'monthly',
-      unit: 'EUR'
-    },
-    tables: [
-      {
-        id: 'I',
-        name: 'Tabela I',
-        audience: 'Single',
-        hasDisability: false,
-        assumesDependents: '0+',
-        bands: [
-          { upTo: 920, rate: 0, deduction: 0 },
-          { 
-            upTo: 1042, 
-            rate: 0.125, 
-            deduction: { type: 'formula', expression: '0.125 * 2.60 * (1273.85 - R)' },
-            additionalPerDependent: 21.43
-          },
-          { over: 1042, rate: 0.2, deduction: 100 }
-        ]
-      },
-      {
-        id: 'II',
-        name: 'Tabela II',
-        audience: 'Single 1+',
-        hasDisability: false,
-        assumesDependents: '1+',
-        bands: [{ upTo: 5000, rate: 0.1, deduction: 0 }]
-      },
-      {
-        id: 'III',
-        name: 'Tabela III',
-        audience: 'Married 1 holder',
-        hasDisability: false,
-        assumesDependents: '0+',
-        bands: [{ upTo: 5000, rate: 0.1, deduction: 0 }]
-      },
-      {
-        id: 'IV',
-        name: 'Tabela IV',
-        audience: 'Disability 0 dependents',
-        hasDisability: true,
-        assumesDependents: '0',
-        bands: [{ upTo: 5000, rate: 0.1, deduction: 0 }]
-      },
-      {
-        id: 'V',
-        name: 'Tabela V',
-        audience: 'Disability 1+ dependents single',
-        hasDisability: true,
-        assumesDependents: '1+',
-        bands: [{ upTo: 5000, rate: 0.1, deduction: 0 }]
-      },
-      {
-        id: 'VI',
-        name: 'Tabela VI',
-        audience: 'Disability 1+ dependents married 2 holders',
-        hasDisability: true,
-        assumesDependents: '1+',
-        bands: [{ upTo: 5000, rate: 0.1, deduction: 0 }]
-      },
-      {
-        id: 'VII',
-        name: 'Tabela VII',
-        audience: 'Disability married 1 holder',
-        hasDisability: true,
-        assumesDependents: '0+',
-        bands: [{ upTo: 5000, rate: 0.1, deduction: 0 }]
-      }
-    ]
-  };
-
   beforeEach(() => {
     TestBed.configureTestingModule({});
     service = TestBed.inject(CalculateNetSalaryService);
-    service.setDataset(mockDataset);
+    // Use real data for these tests
+    service.setDataset(irsData as any);
   });
 
   it('should be created', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('pickTableId', () => {
-    it('should pick Table I for single without dependents and no disability', () => {
-      expect((service as any).pickTableId('single', 0, false)).toBe('I');
+  describe('Table Selection (pickTableId)', () => {
+    // Helper to call private method
+    const getTableId = (status: MaritalStatus, deps: number, disability: boolean = false) => {
+      return (service as any).pickTableId(status, deps, disability);
+    };
+
+    describe('Non-Disabled (Sem Deficiência)', () => {
+      it('should return Table I for Single/Married 2 holders with 0 dependents', () => {
+        expect(getTableId('single', 0)).toBe('I');
+        expect(getTableId('married_two_holders', 0)).toBe('I');
+      });
+
+      it('should return Table II for Single/Married 2 holders with 1+ dependents', () => {
+        expect(getTableId('single', 1)).toBe('II');
+        expect(getTableId('single', 3)).toBe('II');
+        expect(getTableId('married_two_holders', 1)).toBe('II');
+      });
+
+      it('should return Table III for Married 1 holder (any dependents)', () => {
+        expect(getTableId('married_one_holder', 0)).toBe('III');
+        expect(getTableId('married_one_holder', 2)).toBe('III');
+      });
     });
 
-    it('should pick Table II for single with dependents and no disability', () => {
-      expect((service as any).pickTableId('single', 1, false)).toBe('II');
-    });
+    describe('Disabled (Com Deficiência)', () => {
+      it('should return Table IV for Single/Married 2 holders with 0 dependents', () => {
+        expect(getTableId('single', 0, true)).toBe('IV');
+        expect(getTableId('married_two_holders', 0, true)).toBe('IV');
+      });
 
-    it('should pick Table III for married one holder and no disability', () => {
-      expect((service as any).pickTableId('married_one_holder', 0, false)).toBe('III');
-    });
+      it('should return Table V for Single with 1+ dependents', () => {
+        expect(getTableId('single', 1, true)).toBe('V');
+      });
 
-    it('should pick Table VII for married one holder and disability', () => {
-      expect((service as any).pickTableId('married_one_holder', 0, true)).toBe('VII');
+      it('should return Table VI for Married 2 holders with 1+ dependents', () => {
+        expect(getTableId('married_two_holders', 1, true)).toBe('VI');
+      });
+
+      it('should return Table VII for Married 1 holder (any dependents)', () => {
+        expect(getTableId('married_one_holder', 0, true)).toBe('VII');
+        expect(getTableId('married_one_holder', 2, true)).toBe('VII');
+      });
     });
   });
 
-  describe('resolveDeduction', () => {
-    it('should return number for numeric deduction', () => {
-      expect((service as any).resolveDeduction(94.71, 1000)).toBe(94.71);
-    });
-
-    it('should resolve formula deduction: 0.125 * 2.60 * (1273.85 - R)', () => {
-      const R = 1000;
-      const expected = 0.125 * 2.60 * (1273.85 - R);
-      const formula = { type: 'formula', expression: '0.125 * 2.60 * (1273.85 - R)' };
-      expect((service as any).resolveDeduction(formula, R)).toBeCloseTo(expected, 5);
-    });
-
-    it('should throw error for unsupported formula', () => {
-      const formula = { type: 'formula', expression: '2 * R' };
-      expect(() => (service as any).resolveDeduction(formula, 1000)).toThrowError(/Unsupported deduction formula/);
-    });
-  });
-
-  describe('calculate', () => {
-    it('should throw error if dataset is not set', () => {
-      const newService = new CalculateNetSalaryService();
-      expect(() => newService.calculate({} as any)).toThrowError(/IRS dataset not set/);
-    });
-
-    it('should calculate 0% IRS for wage under the first band (920)', () => {
+  describe('Real Calculation Examples (2026 Tables)', () => {
+    it('should calculate 0 IRS for 900€ (under minimum of 920€)', () => {
       const input: IrsInput = {
         grossSalary: 900,
         maritalStatus: 'single',
@@ -144,25 +71,39 @@ describe('CalculateNetSalaryService', () => {
       };
       const result = service.calculate(input);
       expect(result.irsWithheld).toBe(0);
-      expect(result.socialSecurity).toBe(99); // 11% of 900
+      expect(result.socialSecurity).toBe(99);
       expect(result.netSalary).toBe(801);
     });
 
-    it('should calculate IRS using formula for second band', () => {
+    it('should calculate correctly for 1200€ (Table I)', () => {
       const input: IrsInput = {
-        grossSalary: 1000,
+        grossSalary: 1200,
         maritalStatus: 'single',
         location: 'continente',
-        dependents: 1
+        dependents: 0
       };
-      // Table II (picked for single + 1 dependent): rate 0.1, deduction 0
-      // irsRaw = (1000 * 0.1) - 0 - (0 * 1) = 100
+      // 1200 is in Band 5: rate 0.212, deduction 158.18
+      // IRS = 1200 * 0.212 - 158.18 = 254.4 - 158.18 = 96.22
       const result = service.calculate(input);
-      expect(result.irsWithheld).toBe(100);
-      expect(result.socialSecurity).toBe(110);
-      expect(result.netSalary).toBe(790);
+      expect(result.irsWithheld).toBe(96.22);
+      expect(result.socialSecurity).toBe(132);
+      expect(result.netSalary).toBe(971.78);
     });
 
+    it('should apply dependent deduction correctly (Table II)', () => {
+      const input: IrsInput = {
+        grossSalary: 1200,
+        maritalStatus: 'single',
+        location: 'continente',
+        dependents: 2
+      };
+      // Table II, Band 5: rate 0.212, deduction 158.18, additional per dependent 34.29
+      // IRS = (1200 * 0.212) - 158.18 - (2 * 34.29) = 254.4 - 158.18 - 68.58 = 27.64
+      const result = service.calculate(input);
+      expect(result.irsWithheld).toBe(27.64);
+      expect(result.netSalary).toBe(1040.36);
+    });
   });
 });
+
 

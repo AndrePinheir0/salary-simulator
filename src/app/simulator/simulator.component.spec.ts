@@ -178,4 +178,60 @@ describe('SimulatorComponent', () => {
       expect(component.isLoading).toBeFalse();
     }));
   });
+
+  describe('Marital Status and Dependents Mapping', () => {
+    it('should map "single" and 0 dependents to Table I', fakeAsync(() => {
+      component.maritalStatus = 'single';
+      component.dependents = 0;
+      
+      component.calculate();
+      tick(1500);
+
+      expect(mockIrsService.calculate).toHaveBeenCalledWith(jasmine.objectContaining({
+        maritalStatus: 'single',
+        dependents: 0
+      }));
+    }));
+
+    it('should map "single" and 2 dependents to Table II', fakeAsync(() => {
+      component.maritalStatus = 'single';
+      component.dependents = 2;
+      
+      component.calculate();
+      tick(1500);
+
+      expect(mockIrsService.calculate).toHaveBeenCalledWith(jasmine.objectContaining({
+        maritalStatus: 'single',
+        dependents: 2
+      }));
+    }));
+
+    it('should map "married" with 1 dependent to "married_one_holder" (Table III)', fakeAsync(() => {
+      component.maritalStatus = 'married';
+      component.dependents = 1;
+      
+      component.calculate();
+      tick(1500);
+
+      expect(mockIrsService.calculate).toHaveBeenCalledWith(jasmine.objectContaining({
+        maritalStatus: 'married_one_holder',
+        dependents: 1
+      }));
+    }));
+
+    it('should map "married" with 2 dependents to "married_two_holders" (Table I/II)', fakeAsync(() => {
+      component.maritalStatus = 'married';
+      component.dependents = 2;
+      
+      component.calculate();
+      tick(1500);
+
+      expect(mockIrsService.calculate).toHaveBeenCalledWith(jasmine.objectContaining({
+        maritalStatus: 'married_two_holders',
+        dependents: 2
+      }));
+    }));
+  });
 });
+
+

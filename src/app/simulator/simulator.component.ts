@@ -1,11 +1,19 @@
 import { Component, inject, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { NgbAccordionModule } from '@ng-bootstrap/ng-bootstrap';
+import { firstValueFrom } from 'rxjs';
 import {
   CalculateNetSalaryService,
   MaritalStatus,
 } from '../services/calculate-net-salary-service.service';
-import { SalaryReverseService } from '../services/salary-reverse.service';
+import {
+  EndpointActivityStartYear,
+  EndpointBooleanString,
+  EndpointMealCardType,
+  EndpointTwelfths,
+  NetSalaryCalculationResult,
+  NetSalaryEndpointRequest,
+  NetSalaryEndpointService,
+} from '../services/net-salary-endpoint.service';
 import { CurrencyPtPipe } from '../pipes/currency-pt.pipe';
 import { CurrencyMaskDirective } from '../directives/currency-mask.directive';
 import irsData from '../data/irs_2026_continente.json';
@@ -44,14 +52,14 @@ interface ProposalData {
   annualCost: number;
 }
 
-type CalculateBy = 'annualCost' | 'targetNetSalary';
-type MaritalStatusOption = 'single' | 'married';
+type CalculateBy = 'annualCost' | 'targetNetSalary' | 'grossSalary';
+type MaritalStatusOption = MaritalStatus;
 type LocationOption = 'continente' | 'acores' | 'madeira';
 
 @Component({
   selector: 'app-simulator',
   standalone: true,
-  imports: [FormsModule, NgbAccordionModule, CurrencyPtPipe, CurrencyMaskDirective],
+  imports: [FormsModule, CurrencyPtPipe, CurrencyMaskDirective],
   templateUrl: './simulator.component.html',
   styleUrl: './simulator.component.scss',
 })
@@ -66,25 +74,40 @@ export class SimulatorComponent implements OnDestroy {
   pickedIHTPercentage = 0;
 
   // Form inputs
-  hasDuodecimos = false;
   pickedHasDuodecimos = false;
   includeMealAllowance = true;
   IhtPercentage = 25;
   calculateBy: CalculateBy = 'annualCost';
   annualCost = 30000;
+  grossSalary = 1500;
   targetNetSalary = 2000;
   maritalStatus: MaritalStatusOption = 'single';
   location: LocationOption = 'continente';
   dependents = 0;
+  disabilityAbove60 = false;
+  spouseHasDisability = false;
+  dependentsHaveDisability = false;
+  dependentsWithDisability = 0;
+  extraordinaryCompensation = 0;
+  otherIrsSsIncome = 0;
+  otherIrsIncome = 0;
+  otherExemptIncome = 0;
+  socialSecurityRate = 11;
+  twelfths: EndpointTwelfths = '';
+  mealCardType: EndpointMealCardType = 'voucher_card';
+  year = 2026;
+  month = '';
+  applyIrsJovem: EndpointBooleanString = 'false';
+  activityStartYear: EndpointActivityStartYear = '';
 
   // Constants
-  readonly subsRefeicaoDaily = 10.22;
-  readonly subsRefeicaoDays = 22;
-  readonly subsRefeicaoMonths = 11;
-  readonly tsu = 23.75;
-  readonly segSocialRegimeGeral = 11;
+  subsRefeicaoDaily = 10.46;
+  subsRefeicaoDays = 22;
+  subsRefeicaoMonths = 11;
+  tsu = 23.75;
+  segSocialRegimeGeral = 11;
   readonly maxFlexBenefitsPercentage = 30;
-  readonly flexBenefitsStep = 5;
+  readonly flexBenefitsStep = 1;
 
   // Results
   liquidSalarySimulations: SimulationResult[] = [];
@@ -102,7 +125,7 @@ export class SimulatorComponent implements OnDestroy {
     'A finalizar...',
   ];
   private readonly irsService = inject(CalculateNetSalaryService);
-  private readonly reverseService = inject(SalaryReverseService);
+  private readonly netSalaryEndpoint = inject(NetSalaryEndpointService);
   private loadingTimer?: number;
 
   constructor() {
@@ -114,6 +137,14 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   displayedLoadingPhrases: string[] = [];
+
+  get hasDuodecimos(): boolean {
+    return this.twelfths !== '';
+  }
+
+  set hasDuodecimos(value: boolean) {
+    this.twelfths = value ? '2x100%' : '';
+  }
 
   calculate(): void {
     this.pickedHasDuodecimos = this.hasDuodecimos;
@@ -131,27 +162,30 @@ export class SimulatorComponent implements OnDestroy {
       }
     }, 200);
   
-    setTimeout(() => {
+    setTimeout(async () => {
       this.clearLoadingTimer();
-      
-      this.pickedIHTPercentage = this.IhtPercentage;
-      this.annualDailyMealAllowance = this.calculateAnnualMealAllowance();
-      this.monthlyMealAllowance = this.calculateMonthlyMealAllowance();
 
-      // Ambos os caminhos geram ProposalData[]
-      let proposals: ProposalData[] =
-        this.calculateBy === 'annualCost'
-          ? this.calculateByAnnualCost()
-          : this.calculateByNetSalaryTarget();
+      try {
+        this.pickedIHTPercentage = this.IhtPercentage;
+        this.annualDailyMealAllowance = this.calculateAnnualMealAllowance();
+        this.monthlyMealAllowance = this.calculateMonthlyMealAllowance();
 
-      if (this.calculateBy === 'targetNetSalary') {
-        proposals = proposals.map((p) => this.recalculateAnnualCost(p));
+        // Ambos os caminhos geram ProposalData[]
+        let proposals: ProposalData[] =
+          this.calculateBy === 'annualCost'
+            ? await this.calculateByAnnualCost()
+            : this.calculateBy === 'targetNetSalary'
+              ? await this.calculateByNetSalaryTarget()
+              : await this.calculateByGrossSalary();
+
+        // Conversão unificada para SimulationResult[]
+        this.liquidSalarySimulations = proposals.map((proposal) =>
+          this.mapToSimulationResult(proposal),
+        );
+      } catch (error) {
+        console.error('Error calculating salary simulation:', error);
+        this.resetResults();
       }
-
-      // Conversão unificada para SimulationResult[]
-      this.liquidSalarySimulations = proposals.map((proposal) =>
-        this.mapToSimulationResult(proposal),
-      );
 
       this.isLoading = false;
     }, 1000);
@@ -170,140 +204,305 @@ export class SimulatorComponent implements OnDestroy {
       annualCost: correctAnnualCost,
     };
   }
-  private calculateByAnnualCost(): ProposalData[] {
+  private async calculateByAnnualCost(): Promise<ProposalData[]> {
     const monthsToMultiply = this.getMonthsMultiplier();
     const tsuFactor = this.tsu / 100;
     const budget = this.annualCost - this.annualDailyMealAllowance;
-    const proposals: ProposalData[] = [];
+    const proposals: Array<Promise<ProposalData>> = [];
+    const mappedMaritalStatus = this.getMappedMaritalStatus();
 
     for (
       let percentage = 0;
       percentage <= this.maxFlexBenefitsPercentage;
       percentage += this.flexBenefitsStep
     ) {
-      const normalizedPercentage = percentage / 100;
-      const factor =
-        (1 - normalizedPercentage) * (1 + tsuFactor) + normalizedPercentage;
-      const distributable = budget / factor;
-
-      const annualValueToBenefits = distributable * normalizedPercentage;
-      const annualGross = distributable * (1 - normalizedPercentage);
-
-      const monthlyValueToBenefits = annualValueToBenefits / 12;
-      const monthlyGross = annualGross / monthsToMultiply;
-
-      const IHT = this.calculateIHT(monthlyGross);
-      const valueWithoutIHT = monthlyGross - IHT;
-
-      const mappedMaritalStatus = this.getMappedMaritalStatus();
-
-      // Cálculo Max: Benefits não sujeitos a IRS nem SS
-      const calculationMax = this.irsService.calculate({
-        grossSalary: monthlyGross,
-        maritalStatus: mappedMaritalStatus,
-        location: this.location,
-        dependents: Number(this.dependents) || 0,
-        socialSecurityRate: this.segSocialRegimeGeral / 100,
-      });
-
-      // Cálculo Min: Benefits sujeitos a IRS mas não SS
-      const calculationMin = this.irsService.calculate({
-        grossSalary: monthlyGross + monthlyValueToBenefits,
-        maritalStatus: mappedMaritalStatus,
-        location: this.location,
-        dependents: Number(this.dependents) || 0,
-        socialSecurityRate: 0,
-      });
-
-      const ssForMin = this.irsService.calculate({
-        grossSalary: monthlyGross,
-        maritalStatus: mappedMaritalStatus,
-        location: this.location,
-        dependents: Number(this.dependents) || 0,
-        socialSecurityRate: this.segSocialRegimeGeral / 100,
-      }).socialSecurity;
-
-      const netSalaryMin =
-        monthlyGross +
-        monthlyValueToBenefits -
-        calculationMin.irsWithheld -
-        ssForMin;
-
-      const custoAnualParaEmpresa = this.calculateAnnualCostToCompany(
-        monthlyGross,
-        monthlyValueToBenefits,
+      proposals.push(
+        this.buildEndpointProposalFromAnnualCost(
+          budget,
+          percentage,
+          monthsToMultiply,
+          tsuFactor,
+          mappedMaritalStatus,
+        ),
       );
-
-      // Formato ProposalData padronizado
-      proposals.push({
-        flexBenefitsPercentage: percentage,
-        monthlyBaseSalary: this.roundToCents(valueWithoutIHT),
-        monthlyIHT: this.roundToCents(IHT),
-        monthlyBenefits: this.roundToCents(monthlyValueToBenefits),
-        monthlyMealAllowance: this.monthlyMealAllowance,
-        irs: this.roundToCents(calculationMax.irsWithheld),
-        socialSecurityMax: this.roundToCents(calculationMax.socialSecurity),
-        socialSecurityMin: this.roundToCents(ssForMin),
-        totalNetMax: this.roundToCents(
-          calculationMax.netSalary +
-            this.monthlyMealAllowance +
-            monthlyValueToBenefits,
-        ),
-        totalNetMin: this.roundToCents(
-          netSalaryMin + this.monthlyMealAllowance,
-        ),
-        annualCost: this.roundToCents(custoAnualParaEmpresa),
-      });
     }
 
-    return proposals;
+    return Promise.all(proposals);
   }
 
-  private calculateByNetSalaryTarget(): ProposalData[] {
-    const mappedMaritalStatus = this.getMappedMaritalStatus();
+  private calculateByGrossSalary(): Promise<ProposalData[]> {
+    return this.calculateEndpointProposal({
+      percentage: 0,
+      monthlyGross: this.grossSalary,
+      monthlyBaseSalary: this.grossSalary,
+      monthlyIHT: 0,
+      monthlyBenefits: 0,
+      annualCost: this.calculateAnnualCostToCompany(this.grossSalary, 0),
+      maritalStatus: this.getMappedMaritalStatus(),
+    }).then((proposal) => [proposal]);
+  }
 
-    console.log('=== DEBUG REVERSE ===');
-    console.log('Target Net:', this.targetNetSalary);
-    console.log('Meal Daily:', this.subsRefeicaoDaily);
-    console.log('Meal Days:', this.subsRefeicaoDays);
-    console.log('Meal Months:', this.subsRefeicaoMonths);
-    console.log('Annual Meal:', this.annualDailyMealAllowance);
-    console.log('Annual Cost:', this.annualCost);
-    //iht
-    console.log('IHT Percentage:', this.IhtPercentage);
-    console.log('IHT:', this.pickedIHTPercentage);
-    //tsu
-    console.log('TSU:', this.tsu);
-    //ss
-    console.log('Social Security:', this.segSocialRegimeGeral);
-    console.log('=====================');
+  private buildEndpointProposalFromAnnualCost(
+    budget: number,
+    percentage: number,
+    monthsToMultiply: number,
+    tsuFactor: number,
+    maritalStatus: MaritalStatus,
+  ): Promise<ProposalData> {
+    const proposalInput = this.buildProposalInputFromAnnualCost(
+      budget,
+      percentage,
+      monthsToMultiply,
+      tsuFactor,
+    );
 
-    const proposals = this.reverseService.getProposals({
-      targetNetSalary: this.targetNetSalary,
-      location: this.location,
-      maritalStatus: mappedMaritalStatus,
-      dependents: Number(this.dependents) || 0,
-      hasDuodecimos: this.hasDuodecimos,
-      mealAllowanceDaily: this.includeMealAllowance ? this.subsRefeicaoDaily : 0,
-      mealAllowanceDays: this.subsRefeicaoDays,
-      mealAllowanceMonths: this.subsRefeicaoMonths,
-      ihtPercentage: this.IhtPercentage,
-      tsu: this.tsu,
-      ssRate: this.segSocialRegimeGeral / 100,
+    return this.calculateEndpointProposal({
+      percentage,
+      ...proposalInput,
+      maritalStatus,
     });
+  }
 
-    // Retorna diretamente as proposals do serviço
-    // (assumindo que já vêm no formato ProposalData)
-    return proposals;
+  private buildProposalInputFromAnnualCost(
+    budget: number,
+    percentage: number,
+    monthsToMultiply: number,
+    tsuFactor: number,
+  ): {
+    monthlyGross: number;
+    monthlyBaseSalary: number;
+    monthlyIHT: number;
+    monthlyBenefits: number;
+    annualCost: number;
+  } {
+    const normalizedPercentage = percentage / 100;
+    const factor =
+      (1 - normalizedPercentage) * (1 + tsuFactor) + normalizedPercentage;
+    const distributable = budget / factor;
+
+    const annualValueToBenefits = distributable * normalizedPercentage;
+    const annualGross = distributable * (1 - normalizedPercentage);
+
+    const monthlyValueToBenefits = annualValueToBenefits / 12;
+    const monthlyGross = annualGross / monthsToMultiply;
+
+    const IHT = this.calculateIHT(monthlyGross);
+    const valueWithoutIHT = monthlyGross - IHT;
+
+    const custoAnualParaEmpresa = this.calculateAnnualCostToCompany(
+      monthlyGross,
+      monthlyValueToBenefits,
+    );
+
+    return {
+      monthlyGross,
+      monthlyBaseSalary: valueWithoutIHT,
+      monthlyIHT: IHT,
+      monthlyBenefits: monthlyValueToBenefits,
+      annualCost: custoAnualParaEmpresa,
+    };
+  }
+
+  private async calculateEndpointProposal(input: {
+    percentage: number;
+    monthlyGross: number;
+    monthlyBaseSalary: number;
+    monthlyIHT: number;
+    monthlyBenefits: number;
+    annualCost: number;
+    maritalStatus: MaritalStatus;
+  }): Promise<ProposalData> {
+    const [maxResult, minResult] = await Promise.all([
+      this.calculateEndpointResult(
+        this.buildEndpointRequest(input.monthlyGross, input.maritalStatus, {
+          otherExemptIncome: input.monthlyBenefits,
+        }),
+      ),
+      this.calculateEndpointResult(
+        this.buildEndpointRequest(input.monthlyGross, input.maritalStatus, {
+          otherIrsIncome: input.monthlyBenefits,
+        }),
+      ),
+    ]);
+
+    return {
+      flexBenefitsPercentage: input.percentage,
+      monthlyBaseSalary: this.roundToCents(input.monthlyBaseSalary),
+      monthlyIHT: this.roundToCents(input.monthlyIHT),
+      monthlyBenefits: this.roundToCents(input.monthlyBenefits),
+      monthlyMealAllowance: this.monthlyMealAllowance,
+      irs: this.roundToCents(maxResult.irsWithheld),
+      socialSecurityMax: this.roundToCents(maxResult.socialSecurity),
+      socialSecurityMin: this.roundToCents(minResult.socialSecurity),
+      totalNetMax: this.roundToCents(maxResult.netSalary),
+      totalNetMin: this.roundToCents(minResult.netSalary),
+      annualCost: this.roundToCents(input.annualCost),
+    };
+  }
+
+  private async calculateEndpointProposalFromResults(input: {
+    percentage: number;
+    monthlyGross: number;
+    monthlyBaseSalary: number;
+    monthlyIHT: number;
+    monthlyBenefits: number;
+    annualCost: number;
+    maritalStatus: MaritalStatus;
+    maxResult: NetSalaryCalculationResult;
+  }): Promise<ProposalData> {
+    const minResult = await this.calculateEndpointResult(
+      this.buildEndpointRequest(input.monthlyGross, input.maritalStatus, {
+        otherIrsIncome: input.monthlyBenefits,
+      }),
+    );
+
+    return {
+      flexBenefitsPercentage: input.percentage,
+      monthlyBaseSalary: this.roundToCents(input.monthlyBaseSalary),
+      monthlyIHT: this.roundToCents(input.monthlyIHT),
+      monthlyBenefits: this.roundToCents(input.monthlyBenefits),
+      monthlyMealAllowance: this.monthlyMealAllowance,
+      irs: this.roundToCents(input.maxResult.irsWithheld),
+      socialSecurityMax: this.roundToCents(input.maxResult.socialSecurity),
+      socialSecurityMin: this.roundToCents(minResult.socialSecurity),
+      totalNetMax: this.roundToCents(input.maxResult.netSalary),
+      totalNetMin: this.roundToCents(minResult.netSalary),
+      annualCost: this.roundToCents(input.annualCost),
+    };
+  }
+
+  private async calculateEndpointResult(
+    request: NetSalaryEndpointRequest,
+  ): Promise<NetSalaryCalculationResult> {
+    const response = await firstValueFrom(
+      this.netSalaryEndpoint.calculateNetSalary(request),
+    );
+
+    return this.netSalaryEndpoint.extractCalculationResult(response);
+  }
+
+  private buildEndpointRequest(
+    monthlyGross: number,
+    maritalStatus: MaritalStatus,
+    income: {
+      otherExemptIncome?: number;
+      otherIrsIncome?: number;
+      otherIrsSsIncome?: number;
+    } = {},
+  ): NetSalaryEndpointRequest {
+    const hasMealAllowance = this.monthlyMealAllowance > 0;
+
+    return {
+      location: this.location,
+      marital_status: this.toEndpointMaritalStatus(maritalStatus),
+      number_of_dependents: Number(this.dependents) || 0,
+      disability_above_60: this.disabilityAbove60,
+      spouse_has_disability: this.spouseHasDisability,
+      dependents_have_disability: this.dependentsHaveDisability,
+      number_of_dependents_with_disability:
+        Number(this.dependentsWithDisability) || 0,
+      base_salary: monthlyGross,
+      extraordinary_compensation: Number(this.extraordinaryCompensation) || 0,
+      other_irs_ss_income:
+        (Number(this.otherIrsSsIncome) || 0) + (income.otherIrsSsIncome ?? 0),
+      other_irs_income:
+        (Number(this.otherIrsIncome) || 0) + (income.otherIrsIncome ?? 0),
+      other_exempt_income:
+        (Number(this.otherExemptIncome) || 0) + (income.otherExemptIncome ?? 0),
+      social_security_rate: Number(this.socialSecurityRate) || 0,
+      twelfths: this.twelfths,
+      meal_card_type: hasMealAllowance ? this.mealCardType : 'not_available',
+      daily_meal_card_value: hasMealAllowance ? this.subsRefeicaoDaily : 0,
+      meal_card_days: hasMealAllowance ? this.subsRefeicaoDays : 0,
+      year: this.year,
+      month: this.month,
+      apply_irs_jovem: this.applyIrsJovem,
+      activity_start_year: this.activityStartYear,
+    };
+  }
+
+  private toEndpointMaritalStatus(status: MaritalStatus): 'SOL' | 'CAS1' | 'CAS2' {
+    if (status === 'married_one_holder') return 'CAS1';
+    if (status === 'married_two_holders') return 'CAS2';
+    return 'SOL';
+  }
+
+  private async calculateByNetSalaryTarget(): Promise<ProposalData[]> {
+    const mappedMaritalStatus = this.getMappedMaritalStatus();
+    const monthsToMultiply = this.getMonthsMultiplier();
+    const tsuFactor = this.tsu / 100;
+    const proposals: Array<Promise<ProposalData>> = [];
+
+    for (let percentage = 0; percentage <= this.maxFlexBenefitsPercentage; percentage += 5) {
+      proposals.push(
+        this.solveEndpointProposalForTargetNet(
+          percentage,
+          monthsToMultiply,
+          tsuFactor,
+          mappedMaritalStatus,
+        ),
+      );
+    }
+
+    return Promise.all(proposals);
+  }
+
+  private async solveEndpointProposalForTargetNet(
+    percentage: number,
+    monthsToMultiply: number,
+    tsuFactor: number,
+    maritalStatus: MaritalStatus,
+  ): Promise<ProposalData> {
+    let low = 0;
+    let high = 1000000;
+    let bestInput: {
+      monthlyGross: number;
+      monthlyBaseSalary: number;
+      monthlyIHT: number;
+      monthlyBenefits: number;
+      annualCost: number;
+    } | null = null;
+    let bestMaxResult: NetSalaryCalculationResult | null = null;
+
+    for (let i = 0; i < 16; i++) {
+      const annualCost = (low + high) / 2;
+      const budget = annualCost - this.annualDailyMealAllowance;
+      const proposalInput = this.buildProposalInputFromAnnualCost(
+        budget,
+        percentage,
+        monthsToMultiply,
+        tsuFactor,
+      );
+      const maxResult = await this.calculateEndpointResult(
+        this.buildEndpointRequest(proposalInput.monthlyGross, maritalStatus, {
+          otherExemptIncome: proposalInput.monthlyBenefits,
+        }),
+      );
+
+      if (maxResult.netSalary < this.targetNetSalary) {
+        low = annualCost;
+      } else {
+        high = annualCost;
+      }
+
+      bestInput = proposalInput;
+      bestMaxResult = maxResult;
+    }
+
+    return this.calculateEndpointProposalFromResults({
+      percentage,
+      monthlyGross: bestInput!.monthlyGross,
+      monthlyBaseSalary: bestInput!.monthlyBaseSalary,
+      monthlyIHT: bestInput!.monthlyIHT,
+      monthlyBenefits: bestInput!.monthlyBenefits,
+      annualCost: bestInput!.annualCost,
+      maritalStatus,
+      maxResult: bestMaxResult!,
+    });
   }
 
   private getMappedMaritalStatus(): MaritalStatus {
-    if (this.maritalStatus === 'married') {
-      return this.dependents === 1
-        ? 'married_one_holder'
-        : 'married_two_holders';
-    }
-    return 'single';
+    return this.maritalStatus;
   }
 
   /**
@@ -419,11 +618,13 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   private calculateMonthlyMealAllowance(): number {
-    return this.includeMealAllowance ? this.subsRefeicaoDaily * this.subsRefeicaoDays : 0;
+    return this.includeMealAllowance && this.mealCardType !== 'not_available'
+      ? this.subsRefeicaoDaily * this.subsRefeicaoDays
+      : 0;
   }
 
   private calculateAnnualMealAllowance(): number {
-    if (!this.includeMealAllowance) return 0;
+    if (!this.includeMealAllowance || this.mealCardType === 'not_available') return 0;
 
     console.log('=== DEBUG MEAL ===');
     console.log('Daily:', this.subsRefeicaoDaily);
@@ -440,7 +641,8 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   private roundToCents(value: number): number {
-    return Number((Math.ceil(value * 100) / 100).toFixed(2));
+    return value;
+    // return Number((Math.ceil(value * 100) / 100).toFixed(2));
   }
 
   private resetResults(): void {

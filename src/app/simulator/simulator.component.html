@@ -1,451 +1,533 @@
-<div class="container-fluid">
-  <div class="form d-flex flex-column align-items-center">
-    <div class="d-flex gap-3">
-      <div class="d-flex flex-column">
-		
-        <div class="mb-3">
-          <label for="calculateBy" class="form-label">Calcular por:</label>
-          <select
-            class="form-select"
-            [(ngModel)]="calculateBy"
-            name="calculateBy"
-          >
-            <option value="annualCost">Custo Anual Para Empresa</option>
-            <option value="targetNetSalary">Salário Líq. Pretendido</option>
-          </select>
-        </div>
+<div class="proposal-workbench">
+  <section class="proposal-hero">
+    <div>
+      <p class="eyebrow">Simulador de proposta salarial</p>
+      <h1>Monte cenários claros para apresentar a candidatos.</h1>
+      <p class="hero-copy">
+        Compare custo anual, salário líquido, benefícios flexíveis e encargos
+        numa vista pensada para equipas de RH.
+      </p>
+    </div>
+
+    <div class="hero-metrics">
+      <div>
+        <span>Modo</span>
+        <strong>
+          @if (calculateBy === "annualCost") {
+            Custo anual
+          } @else if (calculateBy === "targetNetSalary") {
+            Líquido alvo
+          } @else {
+            Salário bruto
+          }
+        </strong>
       </div>
-      <div class="d-flex flex-column">
-        @if (calculateBy === "annualCost") {
-          <div class="mb-3">
-            <label for="basic-url" class="form-label"
-              >Custo Anual Para Empresa</label
-            >
-            <div class="input-group">
-              <span class="input-group-text" id="basic-addon3">€</span>
-              <input
-                type="text"
-                class="form-control"
-                id="annualCost"
-                name="annualCost"
-                appCurrencyMask
-                aria-describedby="basic-addon3 basic-addon4"
-                [(ngModel)]="annualCost"
-              />
-            </div>
-          </div>
-        }
-
-        @if (calculateBy === "targetNetSalary") {
-          <div class="mb-3">
-            <label for="basic-url" class="form-label"
-              >Salário Líquido Pretendido</label
-            >
-            <div class="input-group">
-              <span class="input-group-text" id="basic-addon3">€</span>
-              <input
-                type="text"
-                class="form-control"
-                id="grossSalary"
-                name="grossSalary"
-                appCurrencyMask
-                aria-describedby="basic-addon3 basic-addon4"
-                [(ngModel)]="targetNetSalary"
-              />
-            </div>
-          </div>
-
-          <div class="mb-3 d-flex">
-            <label for="basic-url" class="form-label"
-              >Inclui Subs. Refeição</label
-            >
-            <div class="form-check">
-              <input
-                type="checkbox"
-                id="includeMealAllowance"
-                name="includeMealAllowance"
-                [(ngModel)]="includeMealAllowance"
-              />
-            </div>
-          </div>
-        }
-      </div>
-      <div class="accordion mt-3" id="accordionExample" ngbAccordion>
-        <div ngbAccordionItem class="accordion-item" [collapsed]="true">
-          <h2 ngbAccordionHeader class="accordion-header">
-            <button ngbAccordionButton class="accordion-button p-2">
-              <i class="bi bi-person me-2"></i>
-              Trabalhador
-            </button>
-          </h2>
-          <div ngbAccordionCollapse class="accordion-collapse">
-            <div ngbAccordionBody class="accordion-body">
-              <ng-template>
-                <div class="mb-3">
-                  <label for="grossSalary" class="form-label"
-                    >Duodécimos
-                  </label>
-                  <select class="form-select" [(ngModel)]="hasDuodecimos">
-                    <option [ngValue]="true">Sim</option>
-                    <option [ngValue]="false">Não</option>
-                  </select>
-                </div>
-
-                <!-- Percentagem para Isenção de Horário de Trabalho -->
-                <div class="mb-3">
-                  <label for="grossSalary" class="form-label"
-                    >Estado Civil
-                  </label>
-                  <select class="form-select" [(ngModel)]="maritalStatus">
-                    <option value="single" selected>Não Casado</option>
-                    <option value="married">Casado</option>
-                  </select>
-                </div>
-
-                <div class="mb-3">
-                  <label for="grossSalary" class="form-label"
-                    >Localização
-                  </label>
-                  <select class="form-select" readonly [(ngModel)]="location">
-                    <option value="continente" selected>Portugal Continental</option>
-                    <option value="madeira" disabled>Madeira</option>
-                  </select>
-                </div>
-
-                <div class="mb-3">
-                  <label for="grossSalary" class="form-label"
-                    >Nr. Dependentes
-                  </label>
-                  <input
-                    type="number"
-                    class="form-control"
-                    [(ngModel)]="dependents"
-                  />
-                </div>
-              </ng-template>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="accordion mt-3" id="accordionExample" ngbAccordion>
-        <div ngbAccordionItem class="accordion-item" [collapsed]="true">
-          <h2 ngbAccordionHeader class="accordion-header">
-            <button ngbAccordionButton class="accordion-button p-2">
-              <i class="bi bi-gear me-2"></i>
-              Configurações
-            </button>
-          </h2>
-          <div ngbAccordionCollapse class="accordion-collapse">
-            <div ngbAccordionBody class="accordion-body">
-              <ng-template>
-                <!-- Percentagem para Isenção de Horário de Trabalho -->
-                <div class="mb-3">
-                  <label for="grossSalary" class="form-label"
-                    >% para IHT:
-                    <small
-                      >% do Salário Base para Isenção de Horário de Trabalho
-                    </small>
-                  </label>
-                  <select class="form-select" [(ngModel)]="IhtPercentage">
-                    <!-- de 30 a 0 de 5 em 5-->
-                    @for (item of [30, 25, 20, 15, 10, 5, 0]; track item) {
-                      <option
-                        [ngValue]="item"
-                      >
-                        {{ item }}%
-                      </option>
-                    }
-                  </select>
-                </div>
-
-                <div class="mb-3">
-                  <label for="basic-url" class="form-label"
-                    >Valor Diário do Subs. Refeição
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text" id="basic-addon3">€</span>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="dailyMealAllowance"
-                      aria-describedby="basic-addon3 basic-addon4"
-                      [(ngModel)]="subsRefeicaoDaily"
-                    />
-                  </div>
-                  <label for="basic-url" class="form-label">x Dias </label>
-                  <div class="input-group">
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="dailyMealDays"
-                      aria-describedby="basic-addon3 basic-addon4"
-                      [(ngModel)]="subsRefeicaoDays"
-                    />
-                  </div>
-                  <label for="basic-url" class="form-label"
-                    >Nrº Meses SR
-                  </label>
-                  <div class="input-group">
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="dailyMealMonth"
-                      aria-describedby="basic-addon3 basic-addon4"
-                      [(ngModel)]="subsRefeicaoMonths"
-                    />
-                  </div>
-                </div>
-                <div class="mb-3">
-                  <label for="basic-url" class="form-label"
-                    >Valor Mensal do Subs. Refeição</label
-                  >
-                  <div class="input-group">
-                    <span class="input-group-text" id="basic-addon3">€</span>
-                    <input
-                      type="text"
-                      disabled
-                      class="form-control"
-                      id="monthlyMealAllowance"
-                      aria-describedby="basic-addon3 basic-addon4"
-                      [(ngModel)]="monthlyMealAllowance"
-                    />
-                  </div>
-                </div>
-
-                <div class="mb-3">
-                  <label for="grossSalary" class="form-label"
-                    >% para Seg. Social
-                    <small>Paga pela empresa </small>
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text" id="basic-addon3">%</span>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="socialSecurity"
-                      aria-describedby="basic-addon3 basic-addon4"
-                      [value]="tsu"
-                    />
-                  </div>
-                </div>
-
-				<div class="mb-3">
-                  <label for="grossSalary" class="form-label"
-                    >Seg. Social Reg. Geral
-                    <small>Paga pelo trabalhador </small>
-                  </label>
-                  <div class="input-group">
-                    <span class="input-group-text" id="basic-addon3">%</span>
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="segSocialRegimeGeral"
-                      aria-describedby="basic-addon3 basic-addon4"
-                      [value]="segSocialRegimeGeral"
-                    />
-                  </div>
-                </div>
-              </ng-template>
-            </div>
-          </div>
-        </div>
+      <div>
+        <span>Ano fiscal</span>
+        <strong>{{ year }}</strong>
       </div>
     </div>
-    <div class="mt-4">
+  </section>
+
+  <section class="control-panel">
+    <div class="primary-controls">
+      <div class="field field-wide">
+        <label for="calculateBy">Calcular por</label>
+        <select
+          class="form-select"
+          id="calculateBy"
+          [(ngModel)]="calculateBy"
+          name="calculateBy"
+        >
+          <option value="annualCost">Custo anual para empresa</option>
+          <option value="targetNetSalary">Salário líquido pretendido</option>
+          <option value="grossSalary">Salário bruto</option>
+        </select>
+      </div>
+
+      @if (calculateBy === "annualCost") {
+        <div class="field">
+          <label for="annualCost">Custo anual para empresa</label>
+          <div class="input-group">
+            <span class="input-group-text">€</span>
+            <input
+              type="text"
+              class="form-control"
+              id="annualCost"
+              name="annualCost"
+              appCurrencyMask
+              [(ngModel)]="annualCost"
+            />
+          </div>
+        </div>
+      }
+
+      @if (calculateBy === "targetNetSalary") {
+        <div class="field">
+          <label for="targetNetSalary">Salário líquido pretendido</label>
+          <div class="input-group">
+            <span class="input-group-text">€</span>
+            <input
+              type="text"
+              class="form-control"
+              id="targetNetSalary"
+              name="targetNetSalary"
+              appCurrencyMask
+              [(ngModel)]="targetNetSalary"
+            />
+          </div>
+        </div>
+      }
+
+      @if (calculateBy === "grossSalary") {
+        <div class="field">
+          <label for="grossSalaryDirect">Salário bruto</label>
+          <div class="input-group">
+            <span class="input-group-text">€</span>
+            <input
+              type="text"
+              class="form-control"
+              id="grossSalaryDirect"
+              name="grossSalaryDirect"
+              appCurrencyMask
+              [(ngModel)]="grossSalary"
+            />
+          </div>
+        </div>
+      }
+
       <button
-        class="btn btn-primary w-100 px-5 rounded-pill"
-        (click)="calculate()"
+        type="button"
+        class="df-button df-button-default-primary df-button-l calculate-button"
         [disabled]="isLoading"
+        (click)="calculate()"
       >
-        @if (isLoading) {
-          <span class="spinner-border spinner-border-sm" role="status"></span>
-        }
-        Calcular
+        <span>{{ isLoading ? 'A calcular...' : 'Calcular proposta' }}</span>
       </button>
     </div>
-  </div>
 
-  <div class="row mt-4">
-    <!--    <div class="col-3">
-            <app-form></app-form>
-        </div> -->
-        @if (isLoading) {
-          <div class="col-12 text-center mt-3">
-            @for (phrase of displayedLoadingPhrases; track phrase) {
-              <div>{{ phrase }}</div>
-            }
-          </div>
-        }
-	
-	@if (liquidSalarySimulations.length > 0 && !isLoading) {
-		
-      <div class="d-flex flex-column gap-4">
-        <div class="card" [hidden]="true">
-          <div class="card-header">Custo para a Empresa</div>
-          <div class="card-body py-0 px-3">
-            <div class="row">
-              <table class="table table-striped-columns table-responsive table-condensed">
-                <thead>
-                  <tr class="text-center">
-                    <th scope="col" class="col-1">% Benefícios Fléxiveis</th>
-                    <th scope="col" class="col-2">Salário Base</th>
-                    <th scope="col" class="col-1">
-                      IHT ({{ pickedIHTPercentage }}%)
-                    </th>
-                    <th scope="col" class="col-2">SB + IHT</th>
-                    <th scope="col" class="col-1">Duodécimos</th>
-                    <th scope="col" class="col-2">Subs. Refeição</th>
-                    <th scope="col" class="col-2">Benefícios Fléxiveis/Mês</th>
-					
-                    <!-- 
-                                    <th scope="col">Total Custo</th>
-                                    <th scope="col">Subs. Refeição</th>
-                                    <th scope="col">Custo Total para a Empresa</th> -->
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (item of liquidSalarySimulations; track item) {
-                    <tr class="text-center">
-                      <td>{{ item.flexBenefitsPercentage }}%</td>
-                      <td>{{ item.salaryBase | currencyPt }}</td>
-                      <td>{{ item.IHT | currencyPt }}</td>
-                      <td>{{ item.salaryBaseAndIHT | currencyPt }}</td>
-                     
-                      <td>{{ item.monthlyMealAllowance | currencyPt }}</td>
-                      <td>
-                        <span class="text-muted font-size-xs"
-                          >({{ item.flexBenefitsPercentage }}%)
-                        </span>
-                        {{ item.monthlyValueToBenefits | currencyPt }}
-                      </td>
-                      <!--    <td>{{ item.rendimento }} €</td>
-                                       <td>{{ item.monthlyMealAllowance }} €</td>
-                                       <td>{{ item.custoAnualPAraEmpresaComSR }} €</td> -->
-                    </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
+    <div class="settings-grid">
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="df-icon-person"></i>
+          <div>
+            <h2>Trabalhador</h2>
+            <p>Perfil usado nas tabelas de retenção.</p>
           </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">Resultado</div>
-          <div class="card-body py-0 px-1">
-            <div class="row">
-              <table class="table table-striped-columns table-responsive">
-                <thead>
-                  <tr class="text-center">
-                    <th scope="col col-1">
-                      % Benefícios <br> Fléxiveis
-                      <!-- toggle hide icon-button-->
-                     
-                    </th>
-                    <th scope="col col-1">
-                      Vencimento <br>Base
-                     
-                    </th>
-                    <th scope="col">
-                      IHT <br> <small class="text-muted">({{ pickedIHTPercentage }}%)</small>
-                     
-                    </th>
-                    @if (pickedHasDuodecimos == true) {
-                      <th scope="col">
-                        Duodécimo SF
-                        <button
-                          class="btn btn-outline-secondary btn-sm"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title="Tooltip on top"
-                        >
-                         
-                        </button>
-                      </th>
-                      <th scope="col">
-                        Duodécimos SN
-                        <button
-                          class="btn btn-outline-secondary btn-sm"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title="Tooltip on top"
-                        >
-                         
-                        </button>
-                      </th>
-                    }
-                    <th scope="col">
-                      IRS
-                     
-                    </th>
-                    <th scope="col">
-                      Salário <br>Liquido
-                     
-                    </th>
-                    <th scope="col">
-                      Cartão Refeição<br> <small class="text-muted">(22 dias)</small>
-                     
-                    </th>
-                    <th scope="col">
-                      Benefécios <br> Flexíveis
-                     
-                    </th>
-                    <th scope="col">
-                      Total <br> Min
-                     
-                    </th>
-                    <th scope="col">
-                      Total <br> Max
-                    </th>
-					          <th class="col">Custo Anual <br> Empresa</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (
-                    item of liquidSalarySimulations;
-                    track item.flexBenefitsPercentage
-                  ) {
-                    <tr class="text-center">
-                      <td class="col-1">{{ item.flexBenefitsPercentage }}%</td>
-                      <td>{{ item.salaryBase | currencyPt }}</td>
-                      <td>{{ item.IHT | currencyPt }}</td>
-                      @if (pickedHasDuodecimos == true) {
-                        <td>{{ item.duodecimoSF | currencyPt }}</td>
-                        <td>{{ item.duodecimoSN | currencyPt }}</td>
-                      }
-                      <td>{{ item.irs | currencyPt }}</td>
-                      <td>{{ item.netSalary | currencyPt }}</td>
-                      <td>{{ item.monthlyMealAllowance | currencyPt }}</td>
-                      <td>
-                        <span class="text-muted font-size-xs"
-                          >({{ item.flexBenefitsPercentage }}%)
-                        </span>
-                        {{ item.monthlyValueToBenefits | currencyPt }}
-                      </td>
-                      <td>{{ item.totalMin | currencyPt }}</td>
-                      <td>{{ item.totalMax | currencyPt }}</td>
-						          <td>{{ item.custoAnualParaEmpresa | currencyPt }}</td>
-					
-                      <!--    <td>{{ item.rendimento }} €</td>
-                                       <td>{{ item.monthlyMealAllowance }} €</td>
-                                       <td>{{ item.custoAnualPAraEmpresaComSR }} €</td> -->
-                    </tr>
-                  }
-                </tbody>
-              </table>
+        <div class="field-grid">
+          <div class="field">
+            <label for="location">Localização</label>
+            <select class="form-select" id="location" [(ngModel)]="location">
+              <option value="continente">Portugal Continental</option>
+              <option value="acores">Açores</option>
+              <option value="madeira">Madeira</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="maritalStatus">Estado civil</label>
+            <select
+              class="form-select"
+              id="maritalStatus"
+              [(ngModel)]="maritalStatus"
+            >
+              <option value="single">Não casado</option>
+              <option value="married_one_holder">Casado, único titular</option>
+              <option value="married_two_holders">Casado, dois titulares</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="dependents">Dependentes</label>
+            <input
+              type="number"
+              class="form-control"
+              id="dependents"
+              min="0"
+              [(ngModel)]="dependents"
+            />
+          </div>
+
+          <div class="field">
+            <label for="dependentsWithDisability">Dependentes com deficiência</label>
+            <input
+              type="number"
+              class="form-control"
+              id="dependentsWithDisability"
+              min="0"
+              [(ngModel)]="dependentsWithDisability"
+            />
+          </div>
+        </div>
+
+        <div class="check-grid">
+          <label class="check-option" for="disabilityAbove60">
+            <input
+              type="checkbox"
+              id="disabilityAbove60"
+              [(ngModel)]="disabilityAbove60"
+            />
+            <span>Incapacidade superior a 60%</span>
+          </label>
+
+          <label class="check-option" for="spouseHasDisability">
+            <input
+              type="checkbox"
+              id="spouseHasDisability"
+              [(ngModel)]="spouseHasDisability"
+            />
+            <span>Cônjuge com deficiência</span>
+          </label>
+
+          <label class="check-option" for="dependentsHaveDisability">
+            <input
+              type="checkbox"
+              id="dependentsHaveDisability"
+              [(ngModel)]="dependentsHaveDisability"
+            />
+            <span>Dependentes com deficiência</span>
+          </label>
+        </div>
+      </section>
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="df-icon-paid"></i>
+          <div>
+            <h2>Rendimentos</h2>
+            <p>Componentes que entram no cálculo oficial.</p>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="extraordinaryCompensation">Extraordinários</label>
+            <div class="input-group">
+              <span class="input-group-text">€</span>
+              <input
+                type="text"
+                class="form-control"
+                id="extraordinaryCompensation"
+                appCurrencyMask
+                [(ngModel)]="extraordinaryCompensation"
+              />
             </div>
+          </div>
+
+          <div class="field">
+            <label for="otherIrsSsIncome">Outros IRS + SS</label>
+            <div class="input-group">
+              <span class="input-group-text">€</span>
+              <input
+                type="text"
+                class="form-control"
+                id="otherIrsSsIncome"
+                appCurrencyMask
+                [(ngModel)]="otherIrsSsIncome"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="otherIrsIncome">Outros só IRS</label>
+            <div class="input-group">
+              <span class="input-group-text">€</span>
+              <input
+                type="text"
+                class="form-control"
+                id="otherIrsIncome"
+                appCurrencyMask
+                [(ngModel)]="otherIrsIncome"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="otherExemptIncome">Outros isentos</label>
+            <div class="input-group">
+              <span class="input-group-text">€</span>
+              <input
+                type="text"
+                class="form-control"
+                id="otherExemptIncome"
+                appCurrencyMask
+                [(ngModel)]="otherExemptIncome"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="IhtPercentage">IHT</label>
+            <select
+              class="form-select"
+              id="IhtPercentage"
+              [(ngModel)]="IhtPercentage"
+            >
+              @for (item of [30, 25, 20, 15, 10, 5, 0]; track item) {
+                <option [ngValue]="item">{{ item }}%</option>
+              }
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="socialSecurityRate">SS trabalhador</label>
+            <div class="input-group">
+              <span class="input-group-text">%</span>
+              <input
+                type="text"
+                class="form-control"
+                id="socialSecurityRate"
+                [(ngModel)]="socialSecurityRate"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="df-icon-calendar"></i>
+          <div>
+            <h2>Subsídios</h2>
+            <p>Duodécimos, refeição e encargos recorrentes.</p>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field field-wide">
+            <label for="twelfths">Duodécimos</label>
+            <select class="form-select" id="twelfths" [(ngModel)]="twelfths">
+              <option value="">Sem duodécimos</option>
+              <option value="1x50%">50% de um subsídio</option>
+              <option value="2x50%">50% dos dois subsídios</option>
+              <option value="2x100%">Dois subsídios por inteiro</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="mealCardType">Subsídio de refeição</label>
+            <select
+              class="form-select"
+              id="mealCardType"
+              [(ngModel)]="mealCardType"
+              (ngModelChange)="includeMealAllowance = mealCardType !== 'not_available'"
+            >
+              <option value="not_available">Não disponível</option>
+              <option value="voucher_card">Vale/cartão refeição</option>
+              <option value="cash">Dinheiro</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="dailyMealAllowance">Valor diário</label>
+            <div class="input-group">
+              <span class="input-group-text">€</span>
+              <input
+                type="text"
+                class="form-control"
+                id="dailyMealAllowance"
+                [(ngModel)]="subsRefeicaoDaily"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="dailyMealDays">Dias/mês</label>
+            <input
+              type="text"
+              class="form-control"
+              id="dailyMealDays"
+              [(ngModel)]="subsRefeicaoDays"
+            />
+          </div>
+
+          <div class="field">
+            <label for="dailyMealMonth">Meses/ano</label>
+            <input
+              type="text"
+              class="form-control"
+              id="dailyMealMonth"
+              [(ngModel)]="subsRefeicaoMonths"
+            />
+          </div>
+
+          <div class="field">
+            <label for="tsu">TSU empresa</label>
+            <div class="input-group">
+              <span class="input-group-text">%</span>
+              <input
+                type="text"
+                class="form-control"
+                id="tsu"
+                [(ngModel)]="tsu"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-card">
+        <div class="card-title">
+          <i class="df-icon-document"></i>
+          <div>
+            <h2>Período fiscal</h2>
+            <p>Ano, mês e regime IRS Jovem.</p>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label for="year">Ano</label>
+            <input
+              type="number"
+              class="form-control"
+              id="year"
+              [(ngModel)]="year"
+            />
+          </div>
+
+          <div class="field">
+            <label for="month">Mês</label>
+            <select class="form-select" id="month" [(ngModel)]="month">
+              <option value="">Sem mês</option>
+              <option value="default">Default</option>
+              <option value="01">Janeiro</option>
+              <option value="02">Fevereiro</option>
+              <option value="03">Março</option>
+              <option value="04">Abril</option>
+              <option value="05">Maio</option>
+              <option value="06">Junho</option>
+              <option value="07">Julho</option>
+              <option value="08">Agosto</option>
+              <option value="09">Setembro</option>
+              <option value="10">Outubro</option>
+              <option value="11">Novembro</option>
+              <option value="12">Dezembro</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="applyIrsJovem">IRS Jovem</label>
+            <select
+              class="form-select"
+              id="applyIrsJovem"
+              [(ngModel)]="applyIrsJovem"
+            >
+              <option value="false">Não</option>
+              <option value="true">Sim</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="activityStartYear">Início de atividade</label>
+            <select
+              class="form-select"
+              id="activityStartYear"
+              [(ngModel)]="activityStartYear"
+              [disabled]="applyIrsJovem !== 'true'"
+            >
+              <option value="">Selecionar</option>
+              <option value="1">1.º ano</option>
+              <option value="3">3.º ano</option>
+              <option value="4">4.º ano</option>
+              <option value="5">5.º ano</option>
+            </select>
+          </div>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  @if (isLoading) {
+    <section class="loading-panel">
+      <span class="loading-dot" aria-hidden="true"></span>
+      <div>
+        @for (phrase of displayedLoadingPhrases; track phrase) {
+          <p>{{ phrase }}</p>
+        }
+      </div>
+    </section>
+  }
+
+  @if (liquidSalarySimulations.length > 0 && !isLoading) {
+    <section class="results-panel">
+      <div class="results-heading">
+        <div>
+          <p class="eyebrow">Resultado</p>
+          <h2>Comparação de propostas</h2>
+        </div>
+        <div class="result-summary">
+          <div>
+            <span>Total max</span>
+            <strong>{{ liquidSalarySimulations[0].totalMax | currencyPt }}</strong>
+          </div>
+          <div>
+            <span>Custo anual</span>
+            <strong>{{ liquidSalarySimulations[0].custoAnualParaEmpresa | currencyPt }}</strong>
+          </div>
+          <div>
+            <span>Salário líquido</span>
+            <strong>{{ liquidSalarySimulations[0].netSalary | currencyPt }}</strong>
           </div>
         </div>
       </div>
-    }
-	@if (liquidSalarySimulations.length == 0) {
-		<div class="card mt-4 w-50 p-0 mx-auto">
-		
-			<div class="card-body">
-				<div class="text-center">
-					Preencha os dados acima para obter simulações.
-				</div>
-			</div>
-		</div>
-	}
+
+      <div class="table-shell">
+        <table class="proposal-table">
+          <thead>
+            <tr>
+              <th>% Benefícios</th>
+              <th>Vencimento base</th>
+              <th>IHT <small>({{ pickedIHTPercentage }}%)</small></th>
+              @if (pickedHasDuodecimos == true) {
+                <th>Duodécimo SF</th>
+                <th>Duodécimo SN</th>
+              }
+              <th>IRS</th>
+              <th>Salário líquido</th>
+              <th>Refeição <small>({{ subsRefeicaoDays }} dias)</small></th>
+              <th>Benefícios flexíveis</th>
+              <th>Total min</th>
+              <th>Total max</th>
+              <th>Custo anual empresa</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of liquidSalarySimulations; track item.flexBenefitsPercentage) {
+              <tr>
+                <td>
+                  <span class="benefit-pill">{{ item.flexBenefitsPercentage }}%</span>
+                </td>
+                <td>{{ item.salaryBase | currencyPt }}</td>
+                <td>{{ item.IHT | currencyPt }}</td>
+                @if (pickedHasDuodecimos == true) {
+                  <td>{{ item.duodecimoSF | currencyPt }}</td>
+                  <td>{{ item.duodecimoSN | currencyPt }}</td>
+                }
+                <td>{{ item.irs | currencyPt }}</td>
+                <td class="strong-value">{{ item.netSalary | currencyPt }}</td>
+                <td>{{ item.monthlyMealAllowance | currencyPt }}</td>
+                <td>{{ item.monthlyValueToBenefits | currencyPt }}</td>
+                <td>{{ item.totalMin | currencyPt }}</td>
+                <td class="strong-value">{{ item.totalMax | currencyPt }}</td>
+                <td>{{ item.custoAnualParaEmpresa | currencyPt }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+  }
+
+  @if (liquidSalarySimulations.length == 0 && !isLoading) {
+    <section class="empty-state">
+      <i class="df-icon-chart-data"></i>
+      <div>
+        <h2>Pronto para simular</h2>
+        <p>Preenche os dados essenciais e calcula uma proposta para comparar cenários.</p>
+      </div>
+    </section>
+  }
 </div>

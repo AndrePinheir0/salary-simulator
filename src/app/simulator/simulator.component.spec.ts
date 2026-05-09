@@ -1,7 +1,8 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, flushMicrotasks, tick } from '@angular/core/testing';
 import { SimulatorComponent } from './simulator.component';
 import { CalculateNetSalaryService, IrsResult, MaritalStatus } from '../services/calculate-net-salary-service.service';
 import { SalaryReverseService } from '../services/salary-reverse.service';
+import { NetSalaryEndpointService } from '../services/net-salary-endpoint.service';
 import { of } from 'rxjs';
 
 describe('SimulatorComponent', () => {
@@ -9,6 +10,7 @@ describe('SimulatorComponent', () => {
   let fixture: ComponentFixture<SimulatorComponent>;
   let mockIrsService: jasmine.SpyObj<CalculateNetSalaryService>;
   let mockReverseService: jasmine.SpyObj<SalaryReverseService>;
+  let mockEndpointService: jasmine.SpyObj<NetSalaryEndpointService>;
 
   // Mock data/results
   const mockIrsResult: IrsResult = {
@@ -42,16 +44,25 @@ describe('SimulatorComponent', () => {
     // 1. Create spies for services
     mockIrsService = jasmine.createSpyObj('CalculateNetSalaryService', ['setDataset', 'calculate']);
     mockReverseService = jasmine.createSpyObj('SalaryReverseService', ['getProposals']);
+    mockEndpointService = jasmine.createSpyObj('NetSalaryEndpointService', ['calculateNetSalary', 'extractCalculationResult']);
 
     // 2. Setup spy return values
     mockIrsService.calculate.and.returnValue(mockIrsResult);
     mockReverseService.getProposals.and.returnValue(mockProposals);
+    mockEndpointService.calculateNetSalary.and.returnValue(of({ data: {} }));
+    mockEndpointService.extractCalculationResult.and.returnValue({
+      netSalary: 890,
+      grossSalary: 1000,
+      irsWithheld: 100,
+      socialSecurity: 110,
+    });
 
     await TestBed.configureTestingModule({
       imports: [SimulatorComponent], // Component is standalone
       providers: [
         { provide: CalculateNetSalaryService, useValue: mockIrsService },
         { provide: SalaryReverseService, useValue: mockReverseService },
+        { provide: NetSalaryEndpointService, useValue: mockEndpointService },
       ]
     }).compileComponents();
 
@@ -77,13 +88,11 @@ describe('SimulatorComponent', () => {
       expect(component.isLoading).toBeTrue();
       
       tick(1000); // Remaining time (total 1500ms)
+      flushMicrotasks();
       
       expect(component.isLoading).toBeFalse();
       expect(component.liquidSalarySimulations.length).toBeGreaterThan(0);
-      
-      // Since it's a loop based on flex benefits step (30 / 5 = 6 + 1 = 7 variations usually)
-      // We expect multiple calls or at least one if step > max
-      expect(mockIrsService.calculate).toHaveBeenCalled();
+      expect(mockEndpointService.calculateNetSalary).toHaveBeenCalled();
       
       // Check structure of one result
       const result = component.liquidSalarySimulations[0];
@@ -92,17 +101,45 @@ describe('SimulatorComponent', () => {
     }));
   });
 
+  describe('Calculation by Gross Salary', () => {
+    it('should calculate one direct endpoint-backed simulation from gross salary', fakeAsync(() => {
+      component.calculateBy = 'grossSalary';
+      component.grossSalary = 1800;
+
+      component.calculate();
+      tick(1500);
+      flushMicrotasks();
+
+      expect(component.liquidSalarySimulations.length).toBe(1);
+      expect(mockEndpointService.calculateNetSalary).toHaveBeenCalledWith(jasmine.objectContaining({
+        base_salary: 1800,
+      }));
+    }));
+  });
+
   describe('Calculation by Target Net Salary', () => {
-    it('should use ReverseService and map results', fakeAsync(() => {
+    it('should use endpoint-backed binary search and map results', fakeAsync(() => {
       component.calculateBy = 'targetNetSalary';
       component.targetNetSalary = 1500;
       
       component.calculate();
       tick(1500);
+      flushMicrotasks();
 
-      expect(mockReverseService.getProposals).toHaveBeenCalled();
-      expect(component.liquidSalarySimulations.length).toBe(1);
-      expect(component.liquidSalarySimulations[0].salaryBase).toBe(1000); 
+      expect(mockEndpointService.calculateNetSalary).toHaveBeenCalled();
+      expect(mockReverseService.getProposals).not.toHaveBeenCalled();
+      expect(component.liquidSalarySimulations.length).toBeGreaterThan(0);
+    }));
+
+    it('should not request the min scenario on every binary-search iteration', fakeAsync(() => {
+      component.calculateBy = 'targetNetSalary';
+      component.targetNetSalary = 1500;
+
+      component.calculate();
+      tick(1500);
+      flushMicrotasks();
+
+      expect(mockEndpointService.calculateNetSalary.calls.count()).toBeLessThanOrEqual(119);
     }));
   });
 
@@ -124,6 +161,7 @@ describe('SimulatorComponent', () => {
 
       component.calculate();
       tick(1500);
+      flushMicrotasks();
 
       const result = component.liquidSalarySimulations[0];
       
@@ -149,6 +187,7 @@ describe('SimulatorComponent', () => {
       
       component.calculate();
       tick(1500);
+      flushMicrotasks();
       
       const result = component.liquidSalarySimulations[0];
       expect(result.duodecimoSF).toBe(0);
@@ -175,6 +214,7 @@ describe('SimulatorComponent', () => {
       expect(component.displayedLoadingPhrases[2]).toBe('A finalizar...');
       
       tick(1100); // Finish
+      flushMicrotasks();
       expect(component.isLoading).toBeFalse();
     }));
   });
@@ -184,9 +224,10 @@ describe('SimulatorComponent', () => {
       component.includeMealAllowance = true;
       component.calculate();
       tick(1500);
+      flushMicrotasks();
 
-      // Value should be (10.22 * 22) = 224.84
-      expect(component.monthlyMealAllowance).toBe(224.84);
+      // Value should be (10.46 * 22) = 230.12 for 2026 card allowance.
+      expect(component.monthlyMealAllowance).toBe(230.12);
       expect(component.annualDailyMealAllowance).toBeGreaterThan(0);
     }));
 
@@ -194,6 +235,7 @@ describe('SimulatorComponent', () => {
       component.includeMealAllowance = false;
       component.calculate();
       tick(1500);
+      flushMicrotasks();
 
       expect(component.monthlyMealAllowance).toBe(0);
       expect(component.annualDailyMealAllowance).toBe(0);
@@ -208,10 +250,11 @@ describe('SimulatorComponent', () => {
       
       component.calculate();
       tick(1500);
+      flushMicrotasks();
 
-      expect(mockIrsService.calculate).toHaveBeenCalledWith(jasmine.objectContaining({
-        maritalStatus: 'single',
-        dependents: 0
+      expect(mockEndpointService.calculateNetSalary).toHaveBeenCalledWith(jasmine.objectContaining({
+        marital_status: 'SOL',
+        number_of_dependents: 0
       }));
     }));
 
@@ -221,39 +264,93 @@ describe('SimulatorComponent', () => {
       
       component.calculate();
       tick(1500);
+      flushMicrotasks();
 
-      expect(mockIrsService.calculate).toHaveBeenCalledWith(jasmine.objectContaining({
-        maritalStatus: 'single',
-        dependents: 2
+      expect(mockEndpointService.calculateNetSalary).toHaveBeenCalledWith(jasmine.objectContaining({
+        marital_status: 'SOL',
+        number_of_dependents: 2
       }));
     }));
 
-    it('should map "married" with 1 dependent to "married_one_holder" (Table III)', fakeAsync(() => {
-      component.maritalStatus = 'married';
+    it('should map "married_one_holder" to CAS1', fakeAsync(() => {
+      component.maritalStatus = 'married_one_holder';
       component.dependents = 1;
       
       component.calculate();
       tick(1500);
+      flushMicrotasks();
 
-      expect(mockIrsService.calculate).toHaveBeenCalledWith(jasmine.objectContaining({
-        maritalStatus: 'married_one_holder',
-        dependents: 1
+      expect(mockEndpointService.calculateNetSalary).toHaveBeenCalledWith(jasmine.objectContaining({
+        marital_status: 'CAS1',
+        number_of_dependents: 1
       }));
     }));
 
-    it('should map "married" with 2 dependents to "married_two_holders" (Table I/II)', fakeAsync(() => {
-      component.maritalStatus = 'married';
+    it('should map "married_two_holders" to CAS2', fakeAsync(() => {
+      component.maritalStatus = 'married_two_holders';
       component.dependents = 2;
       
       component.calculate();
       tick(1500);
+      flushMicrotasks();
 
-      expect(mockIrsService.calculate).toHaveBeenCalledWith(jasmine.objectContaining({
-        maritalStatus: 'married_two_holders',
-        dependents: 2
+      expect(mockEndpointService.calculateNetSalary).toHaveBeenCalledWith(jasmine.objectContaining({
+        marital_status: 'CAS2',
+        number_of_dependents: 2
+      }));
+    }));
+
+    it('should send all official simulator options to the endpoint payload', fakeAsync(() => {
+      component.calculateBy = 'grossSalary';
+      component.grossSalary = 2100;
+      component.location = 'acores';
+      component.maritalStatus = 'married_two_holders';
+      component.dependents = 2;
+      component.disabilityAbove60 = true;
+      component.spouseHasDisability = true;
+      component.dependentsHaveDisability = true;
+      component.dependentsWithDisability = 1;
+      component.extraordinaryCompensation = 150;
+      component.otherIrsSsIncome = 25;
+      component.otherIrsIncome = 30;
+      component.otherExemptIncome = 40;
+      component.socialSecurityRate = 9.3;
+      component.twelfths = '1x50%';
+      component.mealCardType = 'cash';
+      component.subsRefeicaoDaily = 6.15;
+      component.subsRefeicaoDays = 20;
+      component.year = 2025;
+      component.month = '07';
+      component.applyIrsJovem = 'true';
+      component.activityStartYear = '3';
+
+      component.calculate();
+      tick(1500);
+      flushMicrotasks();
+
+      expect(mockEndpointService.calculateNetSalary).toHaveBeenCalledWith(jasmine.objectContaining({
+        location: 'acores',
+        marital_status: 'CAS2',
+        number_of_dependents: 2,
+        disability_above_60: true,
+        spouse_has_disability: true,
+        dependents_have_disability: true,
+        number_of_dependents_with_disability: 1,
+        base_salary: 2100,
+        extraordinary_compensation: 150,
+        other_irs_ss_income: 25,
+        other_irs_income: 30,
+        other_exempt_income: 40,
+        social_security_rate: 9.3,
+        twelfths: '1x50%',
+        meal_card_type: 'cash',
+        daily_meal_card_value: 6.15,
+        meal_card_days: 20,
+        year: 2025,
+        month: '07',
+        apply_irs_jovem: 'true',
+        activity_start_year: '3',
       }));
     }));
   });
 });
-
-

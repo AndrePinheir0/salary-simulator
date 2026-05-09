@@ -33,6 +33,8 @@
               }
             ],
             "styles": [
+              "node_modules/@doutorfinancas/themes/themes/picasso/ap/variables.css",
+              "node_modules/@doutorfinancas/themes/themes/picasso/index.css",
               "src/styles.scss"
             ],
             "scripts": []
@@ -94,6 +96,8 @@
               }
             ],
             "styles": [
+              "node_modules/@doutorfinancas/themes/themes/picasso/ap/variables.css",
+              "node_modules/@doutorfinancas/themes/themes/picasso/index.css",
               "src/styles.scss"
             ],
             "scripts": []

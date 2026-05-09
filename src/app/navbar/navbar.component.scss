@@ -1,6 +1,6 @@
 nav {
-    background-color: #0099cb !important;
+    background-color: var(--bg-primary-brand) !important;
     a {
-        color: white !important;
+        color: var(--text-secondary-inverted) !important;
     }
 }

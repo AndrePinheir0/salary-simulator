@@ -1,12 +1,12 @@
 .sidebar {
-  background-color: #2c3e50;
-  color: #ecf0f1;
+  background-color: var(--bg-primary-inverted);
+  color: var(--text-secondary-inverted);
   height: 100%;
   width: 250px;
   position: relative;
   transition: all 0.3s ease-in-out;
   overflow-x: hidden;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--effects-drop-shadow-m);
 }
 
 .sidebar-header {
@@ -18,16 +18,15 @@
 }
 
 .sidebar-logo {
-  color: #fff;
+  color: var(--text-secondary-inverted);
   text-decoration: none;
-  font-size: 1.5rem;
-  font-weight: bold;
+  font: var(--desktop-heading-bold-2xl);
   text-align: center;
 }
 
 .sidebar-toggle-btn {
-    color: white;
-    background-color: red;
+    color: var(--text-secondary-inverted);
+    background-color: var(--purpose-primary-brand);
 }
 
 .sidebar-menu {
@@ -47,26 +46,26 @@
 .sidebar-item {
   display: flex;
   align-items: center;
-  color: #ecf0f1;
+  color: var(--text-secondary-inverted);
   text-decoration: none;
-  padding: 0.75rem 1rem;
+  padding: var(--spacing-s) var(--spacing-m);
   transition: all 0.2s ease;
   cursor: pointer;
 
   &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--bg-primary-inverted-hover);
   }
 
   &.menu-item-active {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: var(--bg-primary-inverted-active);
   }
 
   i {
-    margin-right: 0.75rem;
+    margin-right: var(--spacing-s);
 
     &.sidebar-item-arrow {
       margin-left: auto;
-      font-size: 0.8rem;
+      font-size: var(--font-size-xs);
       transition: transform 0.3s ease;
 
       &.rotated {
@@ -86,11 +85,11 @@
 }
 
 .sidebar-submenu {
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-primary-inverted-active);
 
   .sidebar-item {
     padding-left: 3rem;
-    font-size: 0.9rem;
+    font: var(--desktop-body-regular-s);
   }
 }
 

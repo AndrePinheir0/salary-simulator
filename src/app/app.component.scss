@@ -15,12 +15,12 @@
 .content {
   flex: 1;
   transition: all 0.3s ease-in-out;
-  background-color: #f4f6f7;
+  background-color: var(--bg-secondary-neutral);
   overflow-y: auto;
   height: 100%;
 
   &-inner {
-    padding: 2rem;
+    padding: var(--spacing-xl);
     max-width: 1200px;
     margin: 0 auto;
   }
@@ -28,20 +28,20 @@
 
 .sidebar-toggle-btn {
   position: absolute;
-  top: 1rem;
+  top: var(--spacing-m);
   right: -32px; // Adjusted to stay visible on the edge
-  background-color: #2c3e50;
+  background-color: var(--bg-primary-inverted);
   border: none;
-  color: #fff;
-  padding: 0.5rem;
-  border-top-right-radius: 0.5rem;
-  border-bottom-right-radius: 0.5rem;
+  color: var(--text-secondary-inverted);
+  padding: var(--spacing-xs);
+  border-top-right-radius: var(--border-radius-m);
+  border-bottom-right-radius: var(--border-radius-m);
   cursor: pointer;
   z-index: 1001;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--effects-drop-shadow-m);
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: #34495e;
+    background-color: var(--bg-primary-inverted-hover);
   }
 }

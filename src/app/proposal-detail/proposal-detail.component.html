@@ -1,0 +1,76 @@
+<div class="detail-layout">
+  <div class="chart-panel">
+    <h3>Decomposição do líquido</h3>
+    <div class="chart-container">
+      <canvas baseChart
+        [data]="chartData"
+        [options]="chartOptions"
+        type="doughnut">
+      </canvas>
+    </div>
+  </div>
+
+  <div class="data-panel">
+    <section class="data-group">
+      <h4>Rendimentos mensais</h4>
+      <dl>
+        <div class="data-row">
+          <dt>Vencimento base</dt>
+          <dd>{{ proposal.salaryBase | currencyPt }}</dd>
+        </div>
+        <div class="data-row">
+          <dt>IHT ({{ proposal.IHT > 0 ? ((proposal.IHT / proposal.salaryBase) * 100).toFixed(0) : 0 }}%)</dt>
+          <dd>{{ proposal.IHT | currencyPt }}</dd>
+        </div>
+        <div class="data-row">
+          <dt>Duodécimo SF</dt>
+          <dd>{{ proposal.duodecimoSF | currencyPt }}</dd>
+        </div>
+        <div class="data-row">
+          <dt>Duodécimo SN</dt>
+          <dd>{{ proposal.duodecimoSN | currencyPt }}</dd>
+        </div>
+        <div class="data-row">
+          <dt>Subsídio de refeição</dt>
+          <dd>{{ proposal.monthlyMealAllowance | currencyPt }}</dd>
+        </div>
+        <div class="data-row">
+          <dt>Benefícios flexíveis ({{ proposal.flexBenefitsPercentage }}%)</dt>
+          <dd>{{ proposal.monthlyValueToBenefits | currencyPt }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="data-group">
+      <h4>Deduções</h4>
+      <dl>
+        <div class="data-row data-row-deduction">
+          <dt>Retenção IRS</dt>
+          <dd>– {{ proposal.irs | currencyPt }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="data-group">
+      <h4>Totais</h4>
+      <dl>
+        <div class="data-row data-row-highlight">
+          <dt>Salário líquido</dt>
+          <dd>{{ proposal.netSalary | currencyPt }}</dd>
+        </div>
+        <div class="data-row">
+          <dt>Total mínimo mensal</dt>
+          <dd>{{ proposal.totalMin | currencyPt }}</dd>
+        </div>
+        <div class="data-row data-row-highlight">
+          <dt>Total máximo mensal</dt>
+          <dd>{{ proposal.totalMax | currencyPt }}</dd>
+        </div>
+        <div class="data-row data-row-strong">
+          <dt>Custo anual empresa</dt>
+          <dd>{{ proposal.custoAnualParaEmpresa | currencyPt }}</dd>
+        </div>
+      </dl>
+    </section>
+  </div>
+</div>

@@ -1,5 +1,6 @@
 import { Component, inject, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DfAccordionComponent, DfInputSelectComponent, DfInputTextComponent } from '@doutorfinancas/ui';
 import { firstValueFrom } from 'rxjs';
 import {
   CalculateNetSalaryService,
@@ -15,27 +16,9 @@ import {
   NetSalaryEndpointService,
 } from '../services/net-salary-endpoint.service';
 import { CurrencyPtPipe } from '../pipes/currency-pt.pipe';
-import { CurrencyMaskDirective } from '../directives/currency-mask.directive';
+import { DfCurrencyMaskDirective } from '../directives/df-currency-mask.directive';
+import { SimulationResult } from '../models/simulation.model';
 import irsData from '../data/irs_2026_continente.json';
-
-interface SimulationResult {
-  flexBenefitsPercentage: number;
-  salaryBase: number;
-  IHT: number;
-  duodecimoSF: number;
-  duodecimoSN: number;
-  irsSF: number;
-  irsSN: number;
-  irs: number;
-  netSalary: number;
-  monthlyValueToBenefits: number;
-  monthlyMealAllowance: number;
-  totalMax: number;
-  totalMin: number;
-  salaryBaseAndIHT: number;
-  rendimento: number;
-  custoAnualParaEmpresa: number;
-}
 
 // Formato intermediário comum para ambos os cálculos
 interface ProposalData {
@@ -52,6 +35,16 @@ interface ProposalData {
   annualCost: number;
 }
 
+interface SelectOption<T = unknown> {
+  id: T;
+  title: string;
+  dataOption?: {
+    icon?: string;
+    disabled?: boolean;
+    showIconRight?: boolean;
+  };
+}
+
 type CalculateBy = 'annualCost' | 'targetNetSalary' | 'grossSalary';
 type MaritalStatusOption = MaritalStatus;
 type LocationOption = 'continente' | 'acores' | 'madeira';
@@ -59,7 +52,7 @@ type LocationOption = 'continente' | 'acores' | 'madeira';
 @Component({
   selector: 'app-simulator',
   standalone: true,
-  imports: [FormsModule, CurrencyPtPipe, CurrencyMaskDirective],
+  imports: [FormsModule, DfAccordionComponent, DfInputSelectComponent, DfInputTextComponent, CurrencyPtPipe, DfCurrencyMaskDirective],
   templateUrl: './simulator.component.html',
   styleUrl: './simulator.component.scss',
 })
@@ -99,6 +92,70 @@ export class SimulatorComponent implements OnDestroy {
   month = '';
   applyIrsJovem: EndpointBooleanString = 'false';
   activityStartYear: EndpointActivityStartYear = '';
+
+  readonly calculateByOptions: SelectOption<CalculateBy>[] = [
+    { id: 'annualCost', title: 'Custo anual para empresa' },
+    { id: 'targetNetSalary', title: 'Salário líquido pretendido' },
+    { id: 'grossSalary', title: 'Salário bruto' },
+  ];
+
+  readonly locationOptions: SelectOption<LocationOption>[] = [
+    { id: 'continente', title: 'Portugal Continental' },
+    { id: 'acores', title: 'Açores' },
+    { id: 'madeira', title: 'Madeira' },
+  ];
+
+  readonly maritalStatusOptions: SelectOption<MaritalStatusOption>[] = [
+    { id: 'single', title: 'Não casado' },
+    { id: 'married_one_holder', title: 'Casado, único titular' },
+    { id: 'married_two_holders', title: 'Casado, dois titulares' },
+  ];
+
+  readonly ihtPercentageOptions: SelectOption<number>[] = [30, 25, 20, 15, 10, 5, 0]
+    .map((value) => ({ id: value, title: `${value}%` }));
+
+  readonly twelfthsOptions: SelectOption<EndpointTwelfths>[] = [
+    { id: '', title: 'Sem duodécimos' },
+    { id: '1x50%', title: '50% de um subsídio' },
+    { id: '2x50%', title: '50% dos dois subsídios' },
+    { id: '2x100%', title: 'Dois subsídios por inteiro' },
+  ];
+
+  readonly mealCardTypeOptions: SelectOption<EndpointMealCardType>[] = [
+    { id: 'not_available', title: 'Não disponível' },
+    { id: 'voucher_card', title: 'Vale/cartão refeição' },
+    { id: 'cash', title: 'Dinheiro' },
+  ];
+
+  readonly monthOptions: SelectOption<string>[] = [
+    { id: '', title: 'Sem mês' },
+    { id: 'default', title: 'Default' },
+    { id: '01', title: 'Janeiro' },
+    { id: '02', title: 'Fevereiro' },
+    { id: '03', title: 'Março' },
+    { id: '04', title: 'Abril' },
+    { id: '05', title: 'Maio' },
+    { id: '06', title: 'Junho' },
+    { id: '07', title: 'Julho' },
+    { id: '08', title: 'Agosto' },
+    { id: '09', title: 'Setembro' },
+    { id: '10', title: 'Outubro' },
+    { id: '11', title: 'Novembro' },
+    { id: '12', title: 'Dezembro' },
+  ];
+
+  readonly booleanOptions: SelectOption<EndpointBooleanString>[] = [
+    { id: 'false', title: 'Não' },
+    { id: 'true', title: 'Sim' },
+  ];
+
+  readonly activityStartYearOptions: SelectOption<EndpointActivityStartYear>[] = [
+    { id: '', title: 'Selecionar' },
+    { id: '1', title: '1.º ano' },
+    { id: '3', title: '3.º ano' },
+    { id: '4', title: '4.º ano' },
+    { id: '5', title: '5.º ano' },
+  ];
 
   // Constants
   subsRefeicaoDaily = 10.46;

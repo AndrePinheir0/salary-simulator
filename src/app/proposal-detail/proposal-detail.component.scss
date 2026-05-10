@@ -46,7 +46,7 @@
   }
 }
 
-dl {
+.data-group dl {
   margin: 0;
   display: flex;
   flex-direction: column;
@@ -84,7 +84,7 @@ dl {
   }
 
   &.data-row-strong {
-    padding: 0.5rem 0.5rem;
+    padding: 0.5rem;
     background: var(--df-color-neutral-900, #111827);
     border-radius: 6px;
 

@@ -19,7 +19,7 @@
           <dd>{{ proposal.salaryBase | currencyPt }}</dd>
         </div>
         <div class="data-row">
-          <dt>IHT ({{ proposal.IHT > 0 ? ((proposal.IHT / proposal.salaryBase) * 100).toFixed(0) : 0 }}%)</dt>
+          <dt>IHT ({{ proposal.IHT > 0 && proposal.salaryBase > 0 ? ((proposal.IHT / proposal.salaryBase) * 100).toFixed(0) : 0 }}%)</dt>
           <dd>{{ proposal.IHT | currencyPt }}</dd>
         </div>
         <div class="data-row">

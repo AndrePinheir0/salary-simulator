@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, Input, OnInit } from '@angular/core';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
 import { DFModalV2Service } from '@doutorfinancas/ui';
@@ -13,7 +13,9 @@ import { SimulationResult } from '../models/simulation.model';
   styleUrl: './proposal-detail.component.scss',
 })
 export class ProposalDetailComponent implements OnInit {
-  // Injected via DFModalV2Service componentData
+  // Passed by DFModalV2Component via ngComponentOutlet inputs: { data: componentData }
+  @Input() data!: SimulationResult;
+
   proposal!: SimulationResult;
 
   private modalService = inject(DFModalV2Service);
@@ -42,23 +44,27 @@ export class ProposalDetailComponent implements OnInit {
   };
 
   ngOnInit() {
-    const base = this.proposal.salaryBase;
-    const iht = this.proposal.IHT;
-    const duodecimos = this.proposal.duodecimoSF + this.proposal.duodecimoSN;
-    const refeicao = this.proposal.monthlyMealAllowance;
-    const beneficios = this.proposal.monthlyValueToBenefits;
-    const irs = Math.abs(this.proposal.irs);
+    // proposal is set by DFModalV2Service via componentData before ngOnInit
+    this.proposal = this.data;
+    if (!this.proposal) return;
+
+    const entries: { label: string; value: number; color: string }[] = [
+      { label: 'Salário base',      value: this.proposal.salaryBase,                                    color: '#3B82F6' },
+      { label: 'IHT',               value: this.proposal.IHT,                                           color: '#8B5CF6' },
+      { label: 'Duodécimos',        value: this.proposal.duodecimoSF + this.proposal.duodecimoSN,       color: '#06B6D4' },
+      { label: 'Refeição',          value: this.proposal.monthlyMealAllowance,                           color: '#10B981' },
+      { label: 'Benefícios flex.',  value: this.proposal.monthlyValueToBenefits,                         color: '#F59E0B' },
+      { label: 'IRS (retenção)',    value: this.proposal.irs,                                            color: '#EF4444' },
+    ].filter(e => e.value > 0);
 
     this.chartData = {
-      labels: ['Salário base', 'IHT', 'Duodécimos', 'Refeição', 'Benefícios flex.', 'IRS (retenção)'],
-      datasets: [
-        {
-          data: [base, iht, duodecimos, refeicao, beneficios, irs],
-          backgroundColor: ['#3B82F6', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444'],
-          borderWidth: 2,
-          borderColor: '#ffffff',
-        },
-      ],
+      labels: entries.map(e => e.label),
+      datasets: [{
+        data: entries.map(e => e.value),
+        backgroundColor: entries.map(e => e.color),
+        borderWidth: 2,
+        borderColor: '#ffffff',
+      }],
     };
   }
 

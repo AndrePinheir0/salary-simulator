@@ -1,5 +1,5 @@
 import { Component, inject, Input, OnInit } from '@angular/core';
-import { NgChartsModule } from 'ng2-charts';
+import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
 import { DFModalV2Service } from '@doutorfinancas/ui';
 import { CurrencyPtPipe } from '../pipes/currency-pt.pipe';
@@ -8,7 +8,7 @@ import { SimulationResult } from '../models/simulation.model';
 @Component({
   selector: 'app-proposal-detail',
   standalone: true,
-  imports: [NgChartsModule, CurrencyPtPipe],
+  imports: [BaseChartDirective, CurrencyPtPipe],
   templateUrl: './proposal-detail.component.html',
   styleUrl: './proposal-detail.component.scss',
 })

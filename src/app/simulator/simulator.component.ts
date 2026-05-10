@@ -1,7 +1,8 @@
 import { Component, inject, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DfAccordionComponent, DfInputSelectComponent, DfInputTextComponent } from '@doutorfinancas/ui';
+import { DfAccordionComponent, DfInputSelectComponent, DfInputTextComponent, DFModalV2Service } from '@doutorfinancas/ui';
 import { firstValueFrom } from 'rxjs';
+import { ProposalDetailComponent } from '../proposal-detail/proposal-detail.component';
 import {
   CalculateNetSalaryService,
   MaritalStatus,
@@ -183,6 +184,7 @@ export class SimulatorComponent implements OnDestroy {
   ];
   private readonly irsService = inject(CalculateNetSalaryService);
   private readonly netSalaryEndpoint = inject(NetSalaryEndpointService);
+  private readonly modalService = inject(DFModalV2Service);
   private loadingTimer?: number;
 
   constructor() {
@@ -201,6 +203,15 @@ export class SimulatorComponent implements OnDestroy {
 
   set hasDuodecimos(value: boolean) {
     this.twelfths = value ? '2x100%' : '';
+  }
+
+  openDetail(item: SimulationResult): void {
+    this.modalService.open({
+      content: ProposalDetailComponent,
+      componentData: item,
+      title: 'Detalhes da proposta',
+      hideCloseButton: false,
+    } as any);
   }
 
   calculate(): void {

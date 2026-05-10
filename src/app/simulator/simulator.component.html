@@ -32,67 +32,44 @@
   <section class="control-panel">
     <div class="primary-controls">
       <div class="field field-wide">
-        <label for="calculateBy">Calcular por</label>
-        <select
-          class="form-select"
-          id="calculateBy"
+        <df-input-select
+          placeholder="Calcular por"
+          [dataOptions]="calculateByOptions"
           [(ngModel)]="calculateBy"
           name="calculateBy"
-        >
-          <option value="annualCost">Custo anual para empresa</option>
-          <option value="targetNetSalary">Salário líquido pretendido</option>
-          <option value="grossSalary">Salário bruto</option>
-        </select>
+        ></df-input-select>
       </div>
 
       @if (calculateBy === "annualCost") {
         <div class="field">
-          <label for="annualCost">Custo anual para empresa</label>
-          <div class="input-group">
-            <span class="input-group-text">€</span>
-            <input
-              type="text"
-              class="form-control"
-              id="annualCost"
-              name="annualCost"
-              appCurrencyMask
-              [(ngModel)]="annualCost"
-            />
-          </div>
+          <df-input-text
+            placeholder="Custo anual para empresa (€)"
+            name="annualCost"
+            appDfCurrencyMask
+            [(ngModel)]="annualCost"
+          ></df-input-text>
         </div>
       }
 
       @if (calculateBy === "targetNetSalary") {
         <div class="field">
-          <label for="targetNetSalary">Salário líquido pretendido</label>
-          <div class="input-group">
-            <span class="input-group-text">€</span>
-            <input
-              type="text"
-              class="form-control"
-              id="targetNetSalary"
-              name="targetNetSalary"
-              appCurrencyMask
-              [(ngModel)]="targetNetSalary"
-            />
-          </div>
+          <df-input-text
+            placeholder="Salário líquido pretendido (€)"
+            name="targetNetSalary"
+            appDfCurrencyMask
+            [(ngModel)]="targetNetSalary"
+          ></df-input-text>
         </div>
       }
 
       @if (calculateBy === "grossSalary") {
         <div class="field">
-          <label for="grossSalaryDirect">Salário bruto</label>
-          <div class="input-group">
-            <span class="input-group-text">€</span>
-            <input
-              type="text"
-              class="form-control"
-              id="grossSalaryDirect"
-              name="grossSalaryDirect"
-              appCurrencyMask
-              [(ngModel)]="grossSalary"
-            />
-          </div>
+          <df-input-text
+            placeholder="Salário bruto (€)"
+            name="grossSalaryDirect"
+            appDfCurrencyMask
+            [(ngModel)]="grossSalary"
+          ></df-input-text>
         </div>
       }
 
@@ -118,47 +95,35 @@
 
         <div class="field-grid">
           <div class="field">
-            <label for="location">Localização</label>
-            <select class="form-select" id="location" [(ngModel)]="location">
-              <option value="continente">Portugal Continental</option>
-              <option value="acores">Açores</option>
-              <option value="madeira">Madeira</option>
-            </select>
+            <df-input-select
+              placeholder="Localização"
+              [dataOptions]="locationOptions"
+              [(ngModel)]="location"
+            ></df-input-select>
           </div>
 
           <div class="field">
-            <label for="maritalStatus">Estado civil</label>
-            <select
-              class="form-select"
-              id="maritalStatus"
+            <df-input-select
+              placeholder="Estado civil"
+              [dataOptions]="maritalStatusOptions"
               [(ngModel)]="maritalStatus"
-            >
-              <option value="single">Não casado</option>
-              <option value="married_one_holder">Casado, único titular</option>
-              <option value="married_two_holders">Casado, dois titulares</option>
-            </select>
+            ></df-input-select>
           </div>
 
           <div class="field">
-            <label for="dependents">Dependentes</label>
-            <input
+            <df-input-text
+              placeholder="Dependentes"
               type="number"
-              class="form-control"
-              id="dependents"
-              min="0"
               [(ngModel)]="dependents"
-            />
+            ></df-input-text>
           </div>
 
           <div class="field">
-            <label for="dependentsWithDisability">Dependentes com deficiência</label>
-            <input
+            <df-input-text
+              placeholder="Dependentes com deficiência"
               type="number"
-              class="form-control"
-              id="dependentsWithDisability"
-              min="0"
               [(ngModel)]="dependentsWithDisability"
-            />
+            ></df-input-text>
           </div>
         </div>
 
@@ -203,239 +168,160 @@
 
         <div class="field-grid">
           <div class="field">
-            <label for="extraordinaryCompensation">Extraordinários</label>
-            <div class="input-group">
-              <span class="input-group-text">€</span>
-              <input
-                type="text"
-                class="form-control"
-                id="extraordinaryCompensation"
-                appCurrencyMask
-                [(ngModel)]="extraordinaryCompensation"
-              />
-            </div>
+            <df-input-text
+              placeholder="Extraordinários (€)"
+              appDfCurrencyMask
+              [(ngModel)]="extraordinaryCompensation"
+            ></df-input-text>
           </div>
 
           <div class="field">
-            <label for="otherIrsSsIncome">Outros IRS + SS</label>
-            <div class="input-group">
-              <span class="input-group-text">€</span>
-              <input
-                type="text"
-                class="form-control"
-                id="otherIrsSsIncome"
-                appCurrencyMask
-                [(ngModel)]="otherIrsSsIncome"
-              />
-            </div>
+            <df-input-text
+              placeholder="Outros IRS + SS (€)"
+              appDfCurrencyMask
+              [(ngModel)]="otherIrsSsIncome"
+            ></df-input-text>
           </div>
 
           <div class="field">
-            <label for="otherIrsIncome">Outros só IRS</label>
-            <div class="input-group">
-              <span class="input-group-text">€</span>
-              <input
-                type="text"
-                class="form-control"
-                id="otherIrsIncome"
-                appCurrencyMask
-                [(ngModel)]="otherIrsIncome"
-              />
-            </div>
+            <df-input-text
+              placeholder="Outros só IRS (€)"
+              appDfCurrencyMask
+              [(ngModel)]="otherIrsIncome"
+            ></df-input-text>
           </div>
 
           <div class="field">
-            <label for="otherExemptIncome">Outros isentos</label>
-            <div class="input-group">
-              <span class="input-group-text">€</span>
-              <input
-                type="text"
-                class="form-control"
-                id="otherExemptIncome"
-                appCurrencyMask
-                [(ngModel)]="otherExemptIncome"
-              />
-            </div>
+            <df-input-text
+              placeholder="Outros isentos (€)"
+              appDfCurrencyMask
+              [(ngModel)]="otherExemptIncome"
+            ></df-input-text>
           </div>
 
           <div class="field">
-            <label for="IhtPercentage">IHT</label>
-            <select
-              class="form-select"
-              id="IhtPercentage"
+            <df-input-select
+              placeholder="IHT"
+              [dataOptions]="ihtPercentageOptions"
               [(ngModel)]="IhtPercentage"
-            >
-              @for (item of [30, 25, 20, 15, 10, 5, 0]; track item) {
-                <option [ngValue]="item">{{ item }}%</option>
-              }
-            </select>
+            ></df-input-select>
           </div>
 
           <div class="field">
-            <label for="socialSecurityRate">SS trabalhador</label>
-            <div class="input-group">
-              <span class="input-group-text">%</span>
-              <input
-                type="text"
-                class="form-control"
-                id="socialSecurityRate"
-                [(ngModel)]="socialSecurityRate"
-              />
-            </div>
+            <df-input-text
+              placeholder="SS trabalhador (%)"
+              [(ngModel)]="socialSecurityRate"
+            ></df-input-text>
           </div>
         </div>
       </section>
 
-      <section class="settings-card">
-        <div class="card-title">
-          <i class="df-icon-calendar"></i>
-          <div>
-            <h2>Subsídios</h2>
-            <p>Duodécimos, refeição e encargos recorrentes.</p>
-          </div>
-        </div>
-
-        <div class="field-grid">
-          <div class="field field-wide">
-            <label for="twelfths">Duodécimos</label>
-            <select class="form-select" id="twelfths" [(ngModel)]="twelfths">
-              <option value="">Sem duodécimos</option>
-              <option value="1x50%">50% de um subsídio</option>
-              <option value="2x50%">50% dos dois subsídios</option>
-              <option value="2x100%">Dois subsídios por inteiro</option>
-            </select>
+      <section class="settings-card settings-card-accordion p-0">
+        <df-accordion [isCollapsed]="true">
+          <div df-accordion-header-content class="card-title">
+            <i class="df-icon-calendar"></i>
+            <div>
+              <h2>Subsídios</h2>
+              <p>Duodécimos, refeição e encargos recorrentes.</p>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="mealCardType">Subsídio de refeição</label>
-            <select
-              class="form-select"
-              id="mealCardType"
-              [(ngModel)]="mealCardType"
-              (ngModelChange)="includeMealAllowance = mealCardType !== 'not_available'"
-            >
-              <option value="not_available">Não disponível</option>
-              <option value="voucher_card">Vale/cartão refeição</option>
-              <option value="cash">Dinheiro</option>
-            </select>
-          </div>
+          <div df-accordion-content class="field-grid">
+            <div class="field field-wide">
+              <df-input-select
+                placeholder="Duodécimos"
+                [dataOptions]="twelfthsOptions"
+                [(ngModel)]="twelfths"
+              ></df-input-select>
+            </div>
 
-          <div class="field">
-            <label for="dailyMealAllowance">Valor diário</label>
-            <div class="input-group">
-              <span class="input-group-text">€</span>
-              <input
-                type="text"
-                class="form-control"
-                id="dailyMealAllowance"
+            <div class="field">
+              <df-input-select
+                placeholder="Subsídio de refeição"
+                [dataOptions]="mealCardTypeOptions"
+                [(ngModel)]="mealCardType"
+                (ngModelChange)="includeMealAllowance = mealCardType !== 'not_available'"
+              ></df-input-select>
+            </div>
+
+            <div class="field">
+              <df-input-text
+                placeholder="Valor diário (€)"
                 [(ngModel)]="subsRefeicaoDaily"
-              />
+              ></df-input-text>
             </div>
-          </div>
 
-          <div class="field">
-            <label for="dailyMealDays">Dias/mês</label>
-            <input
-              type="text"
-              class="form-control"
-              id="dailyMealDays"
-              [(ngModel)]="subsRefeicaoDays"
-            />
-          </div>
+            <div class="field">
+              <df-input-text
+                placeholder="Dias/mês"
+                type="number"
+                [(ngModel)]="subsRefeicaoDays"
+              ></df-input-text>
+            </div>
 
-          <div class="field">
-            <label for="dailyMealMonth">Meses/ano</label>
-            <input
-              type="text"
-              class="form-control"
-              id="dailyMealMonth"
-              [(ngModel)]="subsRefeicaoMonths"
-            />
-          </div>
+            <div class="field">
+              <df-input-text
+                placeholder="Meses/ano"
+                type="number"
+                [(ngModel)]="subsRefeicaoMonths"
+              ></df-input-text>
+            </div>
 
-          <div class="field">
-            <label for="tsu">TSU empresa</label>
-            <div class="input-group">
-              <span class="input-group-text">%</span>
-              <input
-                type="text"
-                class="form-control"
-                id="tsu"
+            <div class="field">
+              <df-input-text
+                placeholder="TSU empresa (%)"
                 [(ngModel)]="tsu"
-              />
+              ></df-input-text>
             </div>
           </div>
-        </div>
+        </df-accordion>
       </section>
 
-      <section class="settings-card">
-        <div class="card-title">
-          <i class="df-icon-document"></i>
-          <div>
-            <h2>Período fiscal</h2>
-            <p>Ano, mês e regime IRS Jovem.</p>
-          </div>
-        </div>
-
-        <div class="field-grid">
-          <div class="field">
-            <label for="year">Ano</label>
-            <input
-              type="number"
-              class="form-control"
-              id="year"
-              [(ngModel)]="year"
-            />
+      <section class="settings-card settings-card-accordion p-0">
+        <df-accordion [isCollapsed]="true">
+          <div df-accordion-header-content class="card-title">
+            <i class="df-icon-document"></i>
+            <div>
+              <h2>Período fiscal</h2>
+              <p>Ano, mês e regime IRS Jovem.</p>
+            </div>
           </div>
 
-          <div class="field">
-            <label for="month">Mês</label>
-            <select class="form-select" id="month" [(ngModel)]="month">
-              <option value="">Sem mês</option>
-              <option value="default">Default</option>
-              <option value="01">Janeiro</option>
-              <option value="02">Fevereiro</option>
-              <option value="03">Março</option>
-              <option value="04">Abril</option>
-              <option value="05">Maio</option>
-              <option value="06">Junho</option>
-              <option value="07">Julho</option>
-              <option value="08">Agosto</option>
-              <option value="09">Setembro</option>
-              <option value="10">Outubro</option>
-              <option value="11">Novembro</option>
-              <option value="12">Dezembro</option>
-            </select>
-          </div>
+          <div df-accordion-content class="field-grid">
+            <div class="field">
+              <df-input-text
+                placeholder="Ano"
+                type="number"
+                [(ngModel)]="year"
+              ></df-input-text>
+            </div>
 
-          <div class="field">
-            <label for="applyIrsJovem">IRS Jovem</label>
-            <select
-              class="form-select"
-              id="applyIrsJovem"
-              [(ngModel)]="applyIrsJovem"
-            >
-              <option value="false">Não</option>
-              <option value="true">Sim</option>
-            </select>
-          </div>
+            <div class="field">
+              <df-input-select
+                placeholder="Mês"
+                [dataOptions]="monthOptions"
+                [(ngModel)]="month"
+              ></df-input-select>
+            </div>
 
-          <div class="field">
-            <label for="activityStartYear">Início de atividade</label>
-            <select
-              class="form-select"
-              id="activityStartYear"
-              [(ngModel)]="activityStartYear"
-              [disabled]="applyIrsJovem !== 'true'"
-            >
-              <option value="">Selecionar</option>
-              <option value="1">1.º ano</option>
-              <option value="3">3.º ano</option>
-              <option value="4">4.º ano</option>
-              <option value="5">5.º ano</option>
-            </select>
+            <div class="field">
+              <df-input-select
+                placeholder="IRS Jovem"
+                [dataOptions]="booleanOptions"
+                [(ngModel)]="applyIrsJovem"
+              ></df-input-select>
+            </div>
+
+            <div class="field">
+              <df-input-select
+                placeholder="Início de atividade"
+                [dataOptions]="activityStartYearOptions"
+                [(ngModel)]="activityStartYear"
+                [disabled]="applyIrsJovem !== 'true'"
+              ></df-input-select>
+            </div>
           </div>
-        </div>
+        </df-accordion>
       </section>
     </div>
   </section>
@@ -492,6 +378,7 @@
               <th>Total min</th>
               <th>Total max</th>
               <th>Custo anual empresa</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -513,6 +400,15 @@
                 <td>{{ item.totalMin | currencyPt }}</td>
                 <td class="strong-value">{{ item.totalMax | currencyPt }}</td>
                 <td>{{ item.custoAnualParaEmpresa | currencyPt }}</td>
+                <td>
+                  <button
+                    type="button"
+                    class="df-button df-button-default-secondary df-button-s"
+                    (click)="openDetail(item)"
+                  >
+                    Ver detalhes
+                  </button>
+                </td>
               </tr>
             }
           </tbody>

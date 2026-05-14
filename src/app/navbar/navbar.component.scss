@@ -3,4 +3,8 @@ nav {
     a {
         color: var(--text-secondary-inverted) !important;
     }
+
+    padding: var(--spacing-s) var(--spacing-none);
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--spacing-l);
 }

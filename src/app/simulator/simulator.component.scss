@@ -15,8 +15,7 @@
 .empty-state {
   background: var(--bg-primary-neutral);
   border: var(--border-width-m) solid var(--border-primary-default);
-  border-radius: var(--border-radius-m);
-  box-shadow: var(--effects-drop-shadow-l);
+  border-radius: var(--border-radius-l);
 }
 
 .proposal-hero {
@@ -66,7 +65,7 @@ h2 {
 .result-summary > div {
   background: var(--bg-secondary-neutral);
   border: var(--border-width-m) solid var(--border-primary-default);
-  border-radius: var(--border-radius-m);
+  border-radius: var(--border-radius-l);
   padding: var(--spacing-s);
 }
 
@@ -94,7 +93,7 @@ h2 {
   align-items: end;
   background: var(--bg-secondary-neutral);
   border: var(--border-width-m) solid var(--border-primary-default);
-  border-radius: var(--border-radius-m);
+  border-radius: var(--border-radius-l);
   display: grid;
   gap: var(--spacing-m);
   grid-template-columns: minmax(220px, 1.1fr) minmax(220px, 1fr) auto;
@@ -110,7 +109,7 @@ h2 {
 
 .settings-card {
   border: var(--border-width-m) solid var(--border-primary-default);
-  border-radius: var(--border-radius-m);
+  border-radius: var(--border-radius-l);
   padding: var(--spacing-m);
 }
 
@@ -124,7 +123,7 @@ h2 {
 .card-title i {
   align-items: center;
   background: var(--bg-secondary-brand);
-  border-radius: var(--border-radius-m);
+  border-radius: 20px;
   color: var(--text-purpose-brand);
   display: inline-flex;
   font-size: var(--font-size-xl);
@@ -157,7 +156,6 @@ h2 {
 }
 
 .form-control,
-.form-select,
 .input-group-text {
   background: var(--input-field-default-default-bg);
   border: var(--input-field-border-width) var(--input-field-border-style)
@@ -175,13 +173,11 @@ h2 {
   }
 }
 
-.form-control:hover,
-.form-select:hover {
+.form-control:hover {
   border-color: var(--input-field-default-hover-border);
 }
 
-.form-control:focus,
-.form-select:focus {
+.form-control:focus {
   border-color: var(--input-field-default-focus-border);
   box-shadow: none;
   outline: var(--border-width-l) solid var(--border-purpose-focus);
@@ -216,7 +212,7 @@ h2 {
   align-items: center;
   background: var(--bg-secondary-neutral);
   border: var(--border-width-m) solid var(--border-primary-default);
-  border-radius: var(--border-radius-m);
+  border-radius: var(--border-radius-l);
   display: flex;
   gap: var(--spacing-xs);
   min-height: var(--height-48);
@@ -323,7 +319,7 @@ h2 {
   border: var(--tags-tertiary-brand-border-width)
     var(--tags-tertiary-brand-border-style)
     var(--tags-tertiary-brand-border-color);
-  border-radius: var(--border-radius-xl);
+  border-radius: var(--border-radius-l);
   color: var(--tags-secondary-brand-label);
   display: inline-flex;
   font: var(--tags-size-s-font);
@@ -338,7 +334,7 @@ h2 {
 
 .loading-dot {
   background: var(--purpose-primary-brand);
-  border-radius: var(--border-radius-xl);
+  border-radius: var(--border-radius-l);
   display: inline-block;
   height: var(--dimensions-12);
   width: var(--dimensions-12);

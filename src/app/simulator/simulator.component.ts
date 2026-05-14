@@ -178,9 +178,7 @@ export class SimulatorComponent implements OnDestroy {
   } as const;
 
   loadingPhrases = [
-    'Espera...',
-    'Quase...',
-    'A finalizar...',
+    'A calcular...',
   ];
   private readonly irsService = inject(CalculateNetSalaryService);
   private readonly netSalaryEndpoint = inject(NetSalaryEndpointService);
@@ -211,6 +209,8 @@ export class SimulatorComponent implements OnDestroy {
       componentData: item,
       title: 'Detalhes da proposta',
       hideCloseButton: false,
+      
+      size: 'xl',
     } as any);
   }
 

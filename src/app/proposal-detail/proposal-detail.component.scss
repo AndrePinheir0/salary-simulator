@@ -1,13 +1,16 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
 .detail-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 2rem;
-  padding: 1.5rem;
-  min-width: 700px;
+  width: 100%;
 
-  @media (max-width: 640px) {
+  @media (max-width: 720px) {
     grid-template-columns: 1fr;
-    min-width: unset;
   }
 }
 

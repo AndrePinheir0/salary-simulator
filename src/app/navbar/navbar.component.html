@@ -1,24 +1,16 @@
-<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom p-3 mb-3">
-  <div class="container-fluid">
-    <h3 class="navbar-brand p-0">Simulador Salarial</h3>
-<!--     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button> -->
-    <div class="collapse navbar-collapse" id="navbarNav">
-    <!--   <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="#">Home</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Features</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Pricing</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link disabled" aria-disabled="true">Disabled</a>
-        </li>
-      </ul> -->
+<nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom p-3">
+  <div class="container-fluid d-flex align-items-center justify-content-between">
+    <div class="d-flex align-items-center gap-2">
+      <div class="logo px-4">
+        <!-- logo Doutor Finanças -->
+        <img src="https://doutorfinancas.github.io/df-ui/assets/logo/Logo_White.svg" alt="Doutor Finanças" class="w-24 h-24">
+      </div>
     </div>
+
+    @if (isAuthenticated()) {
+      <button type="button" class="btn btn-outline-danger btn-sm" (click)="logout()">
+        Logout
+      </button>
+    }
   </div>
 </nav>

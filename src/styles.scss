@@ -1,3 +1,5 @@
+@use "bootstrap/scss/bootstrap" as *;
+
 html,
 body,
 button,
@@ -28,4 +30,15 @@ body {
  
 .p-0 {
   padding: 0 !important;
+}
+
+// Neutraliza a classe .placeholder do Bootstrap (skeleton loading) dentro dos
+// componentes DF, que usam a mesma classe como label flutuante.
+.df-input-group .placeholder {
+  display: inline;
+  min-height: 0;
+  background-color: transparent;
+  opacity: 1;
+  vertical-align: baseline;
+  cursor: text;
 }

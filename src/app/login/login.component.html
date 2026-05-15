@@ -1,0 +1,39 @@
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>Simulador de Salário</h1>
+      <p>Acesso restrito</p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="field">
+        <label for="username">Utilizador</label>
+        <df-input-text
+          formControlName="username"
+          name="username"
+          autocomplete="username"
+        ></df-input-text>
+      </div>
+
+      <div class="field">
+        <label for="password">Palavra-passe</label>
+        <df-input-text
+          formControlName="password"
+          name="password"
+          type="password"
+          autocomplete="current-password"
+        ></df-input-text>
+      </div>
+
+      @if (error()) {
+        <div class="error" role="alert">{{ error() }}</div>
+      }
+
+      <df-button
+        type="submit"
+        label="Entrar"
+        [full-width]="true"
+      ></df-button>
+    </form>
+  </div>
+</div>

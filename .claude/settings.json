@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npx ng *)",
       "Bash(npm run *)",
-      "Bash(md5 -q src/favicon.ico public/favicon.ico)"
+      "Bash(md5 -q src/favicon.ico public/favicon.ico)",
+      "Bash(git rm *)"
     ]
   }
 }

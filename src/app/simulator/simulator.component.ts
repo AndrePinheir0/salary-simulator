@@ -74,6 +74,7 @@ export class SimulatorComponent implements OnDestroy, AfterViewChecked {
   pickedHasDuodecimos = false;
   includeMealAllowance = true;
   IhtPercentage = 25;
+  customFlexBenefitsPercentage: number | string | null = null;
   calculateBy: CalculateBy = 'annualCost';
   annualCost = 30000;
   grossSalary = 1500;
@@ -90,9 +91,6 @@ export class SimulatorComponent implements OnDestroy, AfterViewChecked {
   otherIrsIncome = 0;
   otherExemptIncome = 0;
   socialSecurityRate = 11;
-  // Percentagem de benefícios personalizada (0–100). Quando preenchida, a
-  // simulação gera apenas uma linha para esta percentagem.
-  customFlexBenefitsPercentage: number | null = null;
   twelfths: EndpointTwelfths = '';
   mealCardType: EndpointMealCardType = 'voucher_card';
   year = 2026;

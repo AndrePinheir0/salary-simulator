@@ -98,11 +98,16 @@ export class ProposalDetailComponent implements OnInit {
     if (!this.proposal || this.isExporting) return;
     this.isExporting = true;
     try {
-      // Lazy-load to keep these libs out of the main bundle.
-      const [{ default: ExcelJS }, { saveAs }] = await Promise.all([
+      // Lazy-load to keep these libs out of the main bundle. Estas libs são
+      // CommonJS, por isso o export pode vir em `.default` ou no próprio módulo.
+      const [excelMod, fileSaverMod] = await Promise.all([
         import('exceljs'),
         import('file-saver'),
       ]);
+      const ExcelJS: typeof import('exceljs') =
+        (excelMod as any).default ?? excelMod;
+      const saveAs: typeof import('file-saver').saveAs =
+        (fileSaverMod as any).saveAs ?? (fileSaverMod as any).default;
 
       const p = this.proposal;
       const workbook = new ExcelJS.Workbook();

@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy } from '@angular/core';
+import { AfterViewChecked, Component, ElementRef, inject, OnDestroy, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DfAccordionComponent, DfInputSelectComponent, DfInputTextComponent, DFModalV2Service } from '@doutorfinancas/ui';
 import { firstValueFrom } from 'rxjs';
@@ -57,7 +57,10 @@ type LocationOption = 'continente' | 'acores' | 'madeira';
   templateUrl: './simulator.component.html',
   styleUrl: './simulator.component.scss',
 })
-export class SimulatorComponent implements OnDestroy {
+export class SimulatorComponent implements OnDestroy, AfterViewChecked {
+  @ViewChild('proposalTableRef') proposalTableRef?: ElementRef<HTMLElement>;
+  private shouldScrollToResults = false;
+
   // Loading state
   isLoading = false;
   loadingStatus = '';
@@ -165,7 +168,7 @@ export class SimulatorComponent implements OnDestroy {
   tsu = 23.75;
   segSocialRegimeGeral = 11;
   readonly maxFlexBenefitsPercentage = 30;
-  readonly flexBenefitsStep = 1;
+  readonly flexBenefitsStep = 5;
 
   // Results
   liquidSalarySimulations: SimulationResult[] = [];
@@ -217,6 +220,7 @@ export class SimulatorComponent implements OnDestroy {
   calculate(): void {
     this.pickedHasDuodecimos = this.hasDuodecimos;
     this.resetResults();
+    this.netSalaryEndpoint.clearCache();
     this.isLoading = true;
     
     let phraseIndex = 0;
@@ -250,6 +254,7 @@ export class SimulatorComponent implements OnDestroy {
         this.liquidSalarySimulations = proposals.map((proposal) =>
           this.mapToSimulationResult(proposal),
         );
+        this.shouldScrollToResults = this.liquidSalarySimulations.length > 0;
       } catch (error) {
         console.error('Error calculating salary simulation:', error);
         this.resetResults();
@@ -257,6 +262,16 @@ export class SimulatorComponent implements OnDestroy {
 
       this.isLoading = false;
     }, 1000);
+  }
+
+  ngAfterViewChecked(): void {
+    if (this.shouldScrollToResults && this.proposalTableRef) {
+      this.shouldScrollToResults = false;
+      this.proposalTableRef.nativeElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
   }
 
   // Novo método
@@ -299,15 +314,34 @@ export class SimulatorComponent implements OnDestroy {
   }
 
   private calculateByGrossSalary(): Promise<ProposalData[]> {
-    return this.calculateEndpointProposal({
-      percentage: 0,
-      monthlyGross: this.grossSalary,
-      monthlyBaseSalary: this.grossSalary,
-      monthlyIHT: 0,
-      monthlyBenefits: 0,
-      annualCost: this.calculateAnnualCostToCompany(this.grossSalary, 0),
-      maritalStatus: this.getMappedMaritalStatus(),
-    }).then((proposal) => [proposal]);
+    const mappedMaritalStatus = this.getMappedMaritalStatus();
+    const proposals: Array<Promise<ProposalData>> = [];
+
+    for (
+      let percentage = 0;
+      percentage <= this.maxFlexBenefitsPercentage;
+      percentage += this.flexBenefitsStep
+    ) {
+      // O bruto introduzido é o rendimento total; cada linha desvia % para
+      // benefícios flexíveis, reduzindo o salário em cash na mesma proporção.
+      const normalizedPercentage = percentage / 100;
+      const monthlyBenefits = this.grossSalary * normalizedPercentage;
+      const monthlyGross = this.grossSalary * (1 - normalizedPercentage);
+
+      proposals.push(
+        this.calculateEndpointProposal({
+          percentage,
+          monthlyGross,
+          monthlyBaseSalary: monthlyGross,
+          monthlyIHT: 0,
+          monthlyBenefits,
+          annualCost: this.calculateAnnualCostToCompany(monthlyGross, monthlyBenefits),
+          maritalStatus: mappedMaritalStatus,
+        }),
+      );
+    }
+
+    return Promise.all(proposals);
   }
 
   private buildEndpointProposalFromAnnualCost(
@@ -501,7 +535,11 @@ export class SimulatorComponent implements OnDestroy {
     const tsuFactor = this.tsu / 100;
     const proposals: Array<Promise<ProposalData>> = [];
 
-    for (let percentage = 0; percentage <= this.maxFlexBenefitsPercentage; percentage += 5) {
+    for (
+      let percentage = 0;
+      percentage <= this.maxFlexBenefitsPercentage;
+      percentage += this.flexBenefitsStep
+    ) {
       proposals.push(
         this.solveEndpointProposalForTargetNet(
           percentage,
@@ -521,51 +559,82 @@ export class SimulatorComponent implements OnDestroy {
     tsuFactor: number,
     maritalStatus: MaritalStatus,
   ): Promise<ProposalData> {
-    let low = 0;
-    let high = 1000000;
-    let bestInput: {
-      monthlyGross: number;
-      monthlyBaseSalary: number;
-      monthlyIHT: number;
-      monthlyBenefits: number;
-      annualCost: number;
-    } | null = null;
-    let bestMaxResult: NetSalaryCalculationResult | null = null;
+    // O líquido alvo a atingir é apenas salário+IHT (refeição e benefícios
+    // entram à parte no totalMax/Min). Como o servidor devolve totalNetMax
+    // a incluir refeição+benefícios, comparamos contra esse valor ajustado.
+    const targetForComparison =
+      this.targetNetSalary + this.monthlyMealAllowance;
 
-    for (let i = 0; i < 16; i++) {
-      const annualCost = (low + high) / 2;
+    // Estimativa inicial: assume taxa efetiva combinada (~35%) sobre o bruto
+    // anual para chegar a um custo anual de partida.
+    let annualCost =
+      ((this.targetNetSalary * monthsToMultiply) / 0.65) * (1 + tsuFactor) +
+      this.annualDailyMealAllowance;
+
+    let prevAnnualCost: number | null = null;
+    let prevNet: number | null = null;
+    let proposalInput!: ReturnType<typeof this.buildProposalInputFromAnnualCost>;
+    let maxResult!: NetSalaryCalculationResult;
+
+    const maxIterations = 5;
+    const tolerance = 0.5; // 0,50€ de líquido mensal
+
+    for (let i = 0; i < maxIterations; i++) {
       const budget = annualCost - this.annualDailyMealAllowance;
-      const proposalInput = this.buildProposalInputFromAnnualCost(
+      proposalInput = this.buildProposalInputFromAnnualCost(
         budget,
         percentage,
         monthsToMultiply,
         tsuFactor,
       );
-      const maxResult = await this.calculateEndpointResult(
+
+      maxResult = await this.calculateEndpointResult(
         this.buildEndpointRequest(proposalInput.monthlyGross, maritalStatus, {
           otherExemptIncome: proposalInput.monthlyBenefits,
         }),
       );
 
-      if (maxResult.netSalary < this.targetNetSalary) {
-        low = annualCost;
-      } else {
-        high = annualCost;
+      // totalNetMax do servidor inclui refeição + benefícios isentos.
+      // Para comparar com targetNetSalary (líquido de salário+IHT), subtrai
+      // benefícios mas mantém refeição (que já está no targetForComparison).
+      const netForCompare =
+        maxResult.netSalary - proposalInput.monthlyBenefits;
+      const delta = targetForComparison - netForCompare;
+
+      if (Math.abs(delta) < tolerance) {
+        break;
       }
 
-      bestInput = proposalInput;
-      bestMaxResult = maxResult;
+      // Newton-Raphson empírico: usa o declive entre as duas últimas iterações.
+      // Primeira iteração não tem histórico, usa declive teórico aproximado.
+      let slope: number;
+      if (prevAnnualCost !== null && prevNet !== null) {
+        const denom = annualCost - prevAnnualCost;
+        slope = denom !== 0 ? (netForCompare - prevNet) / denom : 0.05;
+      } else {
+        // declive teórico: 1€ de custo anual ≈ 0.05€ de líquido mensal
+        // (descontados SS empresa, SS trabalhador, IRS, ÷ meses)
+        slope = 0.65 / (monthsToMultiply * (1 + tsuFactor));
+      }
+
+      if (!Number.isFinite(slope) || slope <= 0) {
+        slope = 0.05;
+      }
+
+      prevAnnualCost = annualCost;
+      prevNet = netForCompare;
+      annualCost = Math.max(0, annualCost + delta / slope);
     }
 
     return this.calculateEndpointProposalFromResults({
       percentage,
-      monthlyGross: bestInput!.monthlyGross,
-      monthlyBaseSalary: bestInput!.monthlyBaseSalary,
-      monthlyIHT: bestInput!.monthlyIHT,
-      monthlyBenefits: bestInput!.monthlyBenefits,
-      annualCost: bestInput!.annualCost,
+      monthlyGross: proposalInput.monthlyGross,
+      monthlyBaseSalary: proposalInput.monthlyBaseSalary,
+      monthlyIHT: proposalInput.monthlyIHT,
+      monthlyBenefits: proposalInput.monthlyBenefits,
+      annualCost: proposalInput.annualCost,
       maritalStatus,
-      maxResult: bestMaxResult!,
+      maxResult,
     });
   }
 
@@ -581,7 +650,6 @@ export class SimulatorComponent implements OnDestroy {
     let baseSalary = Number(proposal.monthlyBaseSalary.toFixed(2));
     let iht = Number(proposal.monthlyIHT.toFixed(2));
     const totalIrs = Number(proposal.irs.toFixed(2));
-    const socialSecurityMax = Number(proposal.socialSecurityMax.toFixed(2));
     const monthlyBenefits = Number(proposal.monthlyBenefits.toFixed(2));
 
     let duodecimoSF = 0;
@@ -591,19 +659,17 @@ export class SimulatorComponent implements OnDestroy {
     let irsBase = totalIrs;
 
     if (this.hasDuodecimos) {
-      // Deconstruct the values into 14-month basis
-      // The proposal values are currently (Annual / 12), so we convert back to (Annual / 14)
-      const baseSalary14 = (proposal.monthlyBaseSalary * 12) / 14;
-      const iht14 = (proposal.monthlyIHT * 12) / 14;
+      // A base e o IHT mantêm-se; os duodécimos são os subsídios diluídos a 1/12.
+      // Cada subsídio (férias e Natal) vale um mês de retribuição (base + IHT).
+      const monthlyGross = baseSalary + iht;
+      duodecimoSF = monthlyGross / 12;
+      duodecimoSN = monthlyGross / 12;
 
-      duodecimoSF = baseSalary14 / 12;
-      duodecimoSN = baseSalary14 / 12;
-
-      // Recalculate IRS just for the base part (14 months perspective)
-      // We assume IHT is also part of the base tax calculation
+      // IRS da base (sem subsídios); o excedente de IRS retido por causa dos
+      // duodécimos é repartido pelos dois subsídios.
       const mappedMaritalStatus = this.getMappedMaritalStatus();
       const calculationBase = this.irsService.calculate({
-        grossSalary: baseSalary14 + iht14,
+        grossSalary: monthlyGross,
         maritalStatus: mappedMaritalStatus,
         location: this.location,
         dependents: Number(this.dependents) || 0,
@@ -612,14 +678,9 @@ export class SimulatorComponent implements OnDestroy {
 
       irsBase = Number(calculationBase.irsWithheld.toFixed(2));
       const irsRemanescente = Math.max(0, totalIrs - irsBase);
-      
-      // Split remaining IRS between the two duodecimos
+
       irsSF = Number((irsRemanescente / 2).toFixed(2));
       irsSN = Number((irsRemanescente / 2).toFixed(2));
-      
-      // Update displayed base values to be the 14-month values
-      baseSalary = Number(baseSalary14.toFixed(2));
-      iht = Number(iht14.toFixed(2));
     }
 
     return {
@@ -633,10 +694,9 @@ export class SimulatorComponent implements OnDestroy {
       irs: irsBase,
       netSalary: Number(
         (
-          proposal.monthlyBaseSalary + 
-          proposal.monthlyIHT - 
-          totalIrs - 
-          socialSecurityMax
+          proposal.totalNetMax -
+          proposal.monthlyBenefits -
+          proposal.monthlyMealAllowance
         ).toFixed(2),
       ),
       monthlyMealAllowance: Number(proposal.monthlyMealAllowance),
@@ -654,31 +714,30 @@ export class SimulatorComponent implements OnDestroy {
     valueToBenefits: number,
   ): number {
     const monthsToMultiply = this.getMonthsMultiplier();
-    const annualGross = grossSalary * monthsToMultiply;
-    const annualBenefits = valueToBenefits * 12;
     const tsuFactor = 1 + this.tsu / 100;
 
-    console.log('=== DEBUG CUSTO ===');
-    console.log('Gross Mensal:', grossSalary);
-    console.log('Benefícios Mensais:', valueToBenefits);
-    console.log('Meses (Gross):', monthsToMultiply);
-    console.log('Gross Anual:', annualGross);
-    console.log('TSU Factor:', tsuFactor);
-    console.log('TSU Amount:', annualGross * (tsuFactor - 1));
-    console.log('Benefícios Anuais:', annualBenefits);
-    console.log('Subsídio Anual:', this.annualDailyMealAllowance);
+    // Base sujeita a SS: salário+IHT + compensação extraordinária + outros rendimentos IRS+SS
+    const monthlySsBase =
+      grossSalary +
+      (Number(this.extraordinaryCompensation) || 0) +
+      (Number(this.otherIrsSsIncome) || 0);
+    const annualSsBase = monthlySsBase * monthsToMultiply;
 
-    const total =
-      annualGross * tsuFactor + annualBenefits + this.annualDailyMealAllowance;
-    console.log('TOTAL:', total);
-    console.log('==================');
+    // Rendimentos isentos de SS: flex benefits + outros rendimentos só IRS + isentos (× 12)
+    const monthlyNonSs =
+      valueToBenefits +
+      (Number(this.otherIrsIncome) || 0) +
+      (Number(this.otherExemptIncome) || 0);
+    const annualNonSs = monthlyNonSs * 12;
 
-    return total;
+    return annualSsBase * tsuFactor + annualNonSs + this.annualDailyMealAllowance;
   }
 
   // Helper methods
   private getMonthsMultiplier(): number {
-    return this.hasDuodecimos ? 12 : 14;
+    // Sempre 14 (12 vencimentos + 2 subsídios). Os duodécimos só diluem os
+    // subsídios pelos meses; não alteram a remuneração anual nem o custo da empresa.
+    return 14;
   }
 
   private calculateIHT(monthlyGross: number): number {
@@ -693,19 +752,7 @@ export class SimulatorComponent implements OnDestroy {
 
   private calculateAnnualMealAllowance(): number {
     if (!this.includeMealAllowance || this.mealCardType === 'not_available') return 0;
-
-    console.log('=== DEBUG MEAL ===');
-    console.log('Daily:', this.subsRefeicaoDaily);
-    console.log('Days:', this.subsRefeicaoDays);
-    console.log('Months:', this.subsRefeicaoMonths);
-    console.log(
-      'Result:',
-      this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths,
-    );
-    console.log('==================');
-    return (
-      this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths
-    );
+    return this.subsRefeicaoDaily * this.subsRefeicaoDays * this.subsRefeicaoMonths;
   }
 
   private roundToCents(value: number): number {

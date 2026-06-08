@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, defer, shareReplay } from 'rxjs';
 
 export type EndpointLocation = 'continente' | 'acores' | 'madeira';
 export type EndpointMaritalStatus = 'SOL' | 'CAS1' | 'CAS2';
@@ -47,16 +47,37 @@ export interface NetSalaryCalculationResult {
 @Injectable({ providedIn: 'root' })
 export class NetSalaryEndpointService {
   private readonly basePath = 'https://simulator.do.doutorfinancas.pt/api/simulators';
+  private readonly cache = new Map<string, Observable<NetSalaryEndpointResponse>>();
 
   constructor(private readonly http: HttpClient) {}
 
   calculateNetSalary(
     request: NetSalaryEndpointRequest,
   ): Observable<NetSalaryEndpointResponse> {
-    return this.http.post<NetSalaryEndpointResponse>(
-      `${this.basePath}/net-salary`,
-      this.toFormData(this.transformRequest(request)),
-    );
+    const payload = this.transformRequest(request);
+    const cacheKey = this.buildCacheKey(payload);
+
+    const cached = this.cache.get(cacheKey);
+    if (cached) return cached;
+
+    const shared = defer(() =>
+      this.http.post<NetSalaryEndpointResponse>(
+        `${this.basePath}/net-salary`,
+        this.toFormData(payload),
+      ),
+    ).pipe(shareReplay({ bufferSize: 1, refCount: false }));
+
+    this.cache.set(cacheKey, shared);
+    return shared;
+  }
+
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  private buildCacheKey(payload: Record<string, FormValue>): string {
+    const keys = Object.keys(payload).sort();
+    return keys.map((k) => `${k}=${this.toString(payload[k])}`).join('&');
   }
 
   getIrsTable(
@@ -83,6 +104,7 @@ export class NetSalaryEndpointService {
       grossSalary: this.getNumber(grossSalary, 'total_gross_salary', 0),
       irsWithheld:
         this.getNumber(deductions, 'irs_withholding', 0) +
+        this.getNumber(deductions, 'extra_salary_retention', 0) +
         this.getNumber(netSalary, 'twelfths_withholding', 0),
       socialSecurity: this.getNumber(
         deductions,

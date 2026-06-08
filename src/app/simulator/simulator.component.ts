@@ -90,6 +90,9 @@ export class SimulatorComponent implements OnDestroy, AfterViewChecked {
   otherIrsIncome = 0;
   otherExemptIncome = 0;
   socialSecurityRate = 11;
+  // Percentagem de benefícios personalizada (0–100). Quando preenchida, a
+  // simulação gera apenas uma linha para esta percentagem.
+  customFlexBenefitsPercentage: number | null = null;
   twelfths: EndpointTwelfths = '';
   mealCardType: EndpointMealCardType = 'voucher_card';
   year = 2026;
@@ -162,7 +165,7 @@ export class SimulatorComponent implements OnDestroy, AfterViewChecked {
   ];
 
   // Constants
-  subsRefeicaoDaily = 10.46;
+  subsRefeicaoDaily = 10.2;
   subsRefeicaoDays = 22;
   subsRefeicaoMonths = 11;
   tsu = 23.75;
@@ -287,6 +290,31 @@ export class SimulatorComponent implements OnDestroy, AfterViewChecked {
       annualCost: correctAnnualCost,
     };
   }
+  /**
+   * Percentagens de benefícios flexíveis a simular. Se o utilizador introduziu
+   * uma percentagem personalizada (0–100), devolve apenas essa; caso contrário
+   * devolve o intervalo 0 → maxFlexBenefitsPercentage com o passo configurado.
+   */
+  private getFlexBenefitsPercentages(): number[] {
+    // O input pode ligar como string (campo vazio = '' ou null); normaliza.
+    const raw = this.customFlexBenefitsPercentage as number | string | null;
+    const custom =
+      raw === null || raw === '' || raw === undefined ? null : Number(raw);
+    if (custom !== null && !Number.isNaN(custom) && custom >= 0 && custom <= 100) {
+      return [custom];
+    }
+
+    const percentages: number[] = [];
+    for (
+      let percentage = 0;
+      percentage <= this.maxFlexBenefitsPercentage;
+      percentage += this.flexBenefitsStep
+    ) {
+      percentages.push(percentage);
+    }
+    return percentages;
+  }
+
   private async calculateByAnnualCost(): Promise<ProposalData[]> {
     const monthsToMultiply = this.getMonthsMultiplier();
     const tsuFactor = this.tsu / 100;
@@ -294,11 +322,7 @@ export class SimulatorComponent implements OnDestroy, AfterViewChecked {
     const proposals: Array<Promise<ProposalData>> = [];
     const mappedMaritalStatus = this.getMappedMaritalStatus();
 
-    for (
-      let percentage = 0;
-      percentage <= this.maxFlexBenefitsPercentage;
-      percentage += this.flexBenefitsStep
-    ) {
+    for (const percentage of this.getFlexBenefitsPercentages()) {
       proposals.push(
         this.buildEndpointProposalFromAnnualCost(
           budget,
@@ -317,11 +341,7 @@ export class SimulatorComponent implements OnDestroy, AfterViewChecked {
     const mappedMaritalStatus = this.getMappedMaritalStatus();
     const proposals: Array<Promise<ProposalData>> = [];
 
-    for (
-      let percentage = 0;
-      percentage <= this.maxFlexBenefitsPercentage;
-      percentage += this.flexBenefitsStep
-    ) {
+    for (const percentage of this.getFlexBenefitsPercentages()) {
       // O bruto introduzido é o rendimento total; cada linha desvia % para
       // benefícios flexíveis, reduzindo o salário em cash na mesma proporção.
       const normalizedPercentage = percentage / 100;
@@ -535,11 +555,7 @@ export class SimulatorComponent implements OnDestroy, AfterViewChecked {
     const tsuFactor = this.tsu / 100;
     const proposals: Array<Promise<ProposalData>> = [];
 
-    for (
-      let percentage = 0;
-      percentage <= this.maxFlexBenefitsPercentage;
-      percentage += this.flexBenefitsStep
-    ) {
+    for (const percentage of this.getFlexBenefitsPercentages()) {
       proposals.push(
         this.solveEndpointProposalForTargetNet(
           percentage,

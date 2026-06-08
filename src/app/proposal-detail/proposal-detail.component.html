@@ -1,10 +1,16 @@
 <div class="detail-layout">
   <div class="chart-panel">
-    <h3>Decomposição do líquido</h3>
+    <div class="chart-header">
+      <h3>Decomposição do líquido</h3>
+      <button type="button" class="export-btn" (click)="exportToExcel()" [disabled]="isExporting">
+        {{ isExporting ? 'A exportar…' : 'Exportar Excel' }}
+      </button>
+    </div>
     <div class="chart-container">
       <canvas baseChart
         [data]="chartData"
         [options]="chartOptions"
+        [plugins]="chartPlugins"
         type="doughnut">
       </canvas>
     </div>

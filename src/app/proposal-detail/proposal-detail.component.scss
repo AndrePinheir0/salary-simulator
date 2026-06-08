@@ -21,7 +21,40 @@
     color: var(--df-color-neutral-600, #4b5563);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-bottom: 1rem;
+    margin: 0;
+  }
+}
+
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--df-color-primary-700, #1d4ed8);
+  background: var(--df-color-primary-50, #eff6ff);
+  border: 1px solid var(--df-color-primary-200, #bfdbfe);
+  border-radius: 6px;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--df-color-primary-100, #dbeafe);
+    border-color: var(--df-color-primary-300, #93c5fd);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
   }
 }
 

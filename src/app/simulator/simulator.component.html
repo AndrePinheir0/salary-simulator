@@ -31,7 +31,7 @@
 
   <section class="control-panel">
     <div class="primary-controls">
-      <div class="field field-wide">
+      <div class="field field-half">
         <df-input-select
           placeholder="Calcular por"
           [dataOptions]="calculateByOptions"
@@ -73,14 +73,15 @@
         </div>
       }
 
-      <button
-        type="button"
-        class="df-button df-button-default-primary df-button-l calculate-button"
-        [disabled]="isLoading"
-        (click)="calculate()"
-      >
-        <span>{{ isLoading ? 'A calcular...' : 'Calcular proposta' }}</span>
-      </button>
+      <div class="field">
+        <df-input-text
+          placeholder="% de benefícios personalizada"
+          name="customFlexBenefitsPercentage"
+          type="number"
+          [(ngModel)]="customFlexBenefitsPercentage"
+        ></df-input-text>
+      </div>
+
     </div>
 
     <div class="settings-grid">
@@ -325,6 +326,16 @@
       </section>
     </div>
   </section>
+
+
+  <button
+    type="button"
+    class="df-button df-button-default-primary df-button-l calculate-button w-50 m-auto"
+    [disabled]="isLoading"
+    (click)="calculate()"
+  >
+    <span>{{ isLoading ? 'A calcular...' : 'Calcular proposta' }}</span>
+  </button>
 
   @if (isLoading) {
     <section class="loading-panel">
